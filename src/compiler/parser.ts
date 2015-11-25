@@ -2015,7 +2015,7 @@ namespace ts {
         }
 
         function isStartOfParameter(): boolean {
-            return token === SyntaxKind.DotDotDotToken || isIdentifierOrPattern() || isModifierKind(token) || token === SyntaxKind.AtToken;
+            return token === SyntaxKind.DotDotDotToken || isIdentifierOrPattern() || isModifierKind(token) || token === SyntaxKind.AtToken || token === SyntaxKind.ThisKeyword;
         }
 
         function setModifiers(node: Node, modifiers: ModifiersArray) {
@@ -2027,14 +2027,19 @@ namespace ts {
 
         function parseParameter(): ParameterDeclaration {
             const node = <ParameterDeclaration>createNode(SyntaxKind.Parameter);
-            node.decorators = parseDecorators();
-            setModifiers(node, parseModifiers());
-            node.dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
+            if(token === SyntaxKind.ThisKeyword) {
+                // CHEAT: pretend `this` is an identifier even though it isn't
+                node.name = parseTokenNode<Identifier>();
+            }
+            else {
+                node.decorators = parseDecorators();
+                setModifiers(node, parseModifiers());
+                node.dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
 
-            // FormalParameter [Yield,Await]:
-            //      BindingElement[?Yield,?Await]
-
-            node.name = parseIdentifierOrPattern();
+                // FormalParameter [Yield,Await]:
+                //      BindingElement[?Yield,?Await]
+                node.name = parseIdentifierOrPattern();
+            }
 
             if (getFullWidth(node.name) === 0 && node.flags === 0 && isModifierKind(token)) {
                 // in cases like
@@ -2048,6 +2053,7 @@ namespace ts {
                 nextToken();
             }
 
+            // TODO: this? should NOT be allowed. Seriously.
             node.questionToken = parseOptionalToken(SyntaxKind.QuestionToken);
             node.type = parseParameterType();
             node.initializer = parseBindingElementInitializer(/*inParameter*/ true);
@@ -2495,7 +2501,7 @@ namespace ts {
                 // ( ...
                 return true;
             }
-            if (isIdentifier() || isModifierKind(token)) {
+            if (token === SyntaxKind.ThisKeyword || isIdentifier() || isModifierKind(token)) {
                 nextToken();
                 if (token === SyntaxKind.ColonToken || token === SyntaxKind.CommaToken ||
                     token === SyntaxKind.QuestionToken || token === SyntaxKind.EqualsToken ||
