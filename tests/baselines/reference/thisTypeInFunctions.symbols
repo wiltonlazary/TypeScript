@@ -1,0 +1,54 @@
+=== tests/cases/conformance/types/thisType/thisTypeInFunctions.ts ===
+function f(this: { y: number }, x: number): number {
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 0, 0))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 0, 11))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 0, 18))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 0, 31))
+
+    return x + this.y;
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 0, 31))
+>this.y : Symbol(y, Decl(thisTypeInFunctions.ts, 0, 18))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 0, 16))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 0, 18))
+}
+function noThisSpecified(x: number): number {
+>noThisSpecified : Symbol(noThisSpecified, Decl(thisTypeInFunctions.ts, 2, 1))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 3, 25))
+
+    // for backward compatibility, this: any, so this is ok
+    // (until we add --noImplicitThisAny)
+    return x + this.notSpecified;
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 3, 25))
+}
+let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
+>ok : Symbol(ok, Decl(thisTypeInFunctions.ts, 8, 3))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 8, 9))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 8, 19))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 8, 24))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 8, 31))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 8, 44))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 8, 70))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 8, 77))
+
+let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: noThisSpecified };
+>implicitAnyOk : Symbol(implicitAnyOk, Decl(thisTypeInFunctions.ts, 9, 3))
+>notSpecified : Symbol(notSpecified, Decl(thisTypeInFunctions.ts, 9, 20))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 9, 41))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 9, 46))
+>notSpecified : Symbol(notSpecified, Decl(thisTypeInFunctions.ts, 9, 71))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 9, 89))
+>noThisSpecified : Symbol(noThisSpecified, Decl(thisTypeInFunctions.ts, 2, 1))
+
+ok.f(13);
+>ok.f : Symbol(f, Decl(thisTypeInFunctions.ts, 8, 19))
+>ok : Symbol(ok, Decl(thisTypeInFunctions.ts, 8, 3))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 8, 19))
+
+noThisSpecified(12);
+>noThisSpecified : Symbol(noThisSpecified, Decl(thisTypeInFunctions.ts, 2, 1))
+
+implicitAnyOk.f(12);
+>implicitAnyOk.f : Symbol(f, Decl(thisTypeInFunctions.ts, 9, 41))
+>implicitAnyOk : Symbol(implicitAnyOk, Decl(thisTypeInFunctions.ts, 9, 3))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 9, 41))
+
