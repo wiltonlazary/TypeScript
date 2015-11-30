@@ -1,9 +1,9 @@
 //// [thisTypeInFunctions.ts]
-function propertyName(this: { y: number }, x: number): number {
-    return x + this.notFound;
-}
 function f(this: { y: number }, x: number): number {
     return x + this.y;
+}
+function propertyName(this: { y: number }, x: number): number {
+    return x + this.notFound;
 }
 function noThisSpecified(x: number): number {
     // for backward compatibility, this: any, so this is ok
@@ -25,11 +25,11 @@ wrongPropertyName.f(13);
 
 
 //// [thisTypeInFunctions.js]
-function propertyName(this, x) {
-    return x + this.notFound;
-}
 function f(this, x) {
     return x + this.y;
+}
+function propertyName(this, x) {
+    return x + this.notFound;
 }
 function noThisSpecified(x) {
     // for backward compatibility, this: any, so this is ok

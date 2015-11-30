@@ -1,8 +1,8 @@
-function propertyName(this: { y: number }, x: number): number {
-    return x + this.notFound;
-}
 function f(this: { y: number }, x: number): number {
     return x + this.y;
+}
+function propertyName(this: { y: number }, x: number): number {
+    return x + this.notFound;
 }
 function noThisSpecified(x: number): number {
     // for backward compatibility, this: any, so this is ok

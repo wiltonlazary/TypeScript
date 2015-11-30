@@ -1,3 +1,5 @@
+tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(5,21): error TS2339: Property 'notFound' does not exist on type '{ y: number; }'.
+tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(13,21): error TS2339: Property 'notSpecified' does not exist on type 'void'.
 tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(20,6): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(22,1): error TS2345: Argument of type '{ y: string; f: (this: { y: number; }, x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
   Types of property 'y' are incompatible.
@@ -6,12 +8,14 @@ tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(23,1): error TS234
   Property 'y' is missing in type '{ wrongName: number; f: (this: { y: number; }, x: number) => number; }'.
 
 
-==== tests/cases/conformance/types/thisType/thisTypeInFunctions.ts (3 errors) ====
-    function propertyName(this: { y: number }, x: number): number {
-        return x + this.notFound;
-    }
+==== tests/cases/conformance/types/thisType/thisTypeInFunctions.ts (5 errors) ====
     function f(this: { y: number }, x: number): number {
         return x + this.y;
+    }
+    function propertyName(this: { y: number }, x: number): number {
+        return x + this.notFound;
+                        ~~~~~~~~
+!!! error TS2339: Property 'notFound' does not exist on type '{ y: number; }'.
     }
     function noThisSpecified(x: number): number {
         // for backward compatibility, this: any, so this is ok
@@ -20,6 +24,8 @@ tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(23,1): error TS234
     }
     function voidThisSpecified(this: void, x: number): number {
         return x + this.notSpecified;
+                        ~~~~~~~~~~~~
+!!! error TS2339: Property 'notSpecified' does not exist on type 'void'.
     }
     let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
     let wrongPropertyType: {y: string, f: (this: { y: number }, x: number) => number} = { y: 'foo', f };
