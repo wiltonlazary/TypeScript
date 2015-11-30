@@ -1,34 +1,42 @@
-tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(13,7): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
-tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(14,1): error TS2345: Argument of type '{ y: string; f: (this: { y: number; }, x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
+tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(20,6): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(22,1): error TS2345: Argument of type '{ y: string; f: (this: { y: number; }, x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
   Types of property 'y' are incompatible.
     Type 'string' is not assignable to type 'number'.
-tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(15,1): error TS2345: Argument of type '{ wrongName: number; f: (this: { y: number; }, x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
+tests/cases/conformance/types/thisType/thisTypeInFunctions.ts(23,1): error TS2345: Argument of type '{ wrongName: number; f: (this: { y: number; }, x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
   Property 'y' is missing in type '{ wrongName: number; f: (this: { y: number; }, x: number) => number; }'.
 
 
 ==== tests/cases/conformance/types/thisType/thisTypeInFunctions.ts (3 errors) ====
+    function propertyName(this: { y: number }, x: number): number {
+        return x + this.notFound;
+    }
     function f(this: { y: number }, x: number): number {
         return x + this.y;
     }
-    function g(this: { y: number }, x: number): number {
-        return x + this.notFound;
+    function noThisSpecified(x: number): number {
+        // for backward compatibility, this: any, so this is ok
+        // (until we add --noImplicitThisAny)
+        return x + this.notSpecified;
     }
-    let obj: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
-    let obj2: {y: string, f: (this: { y: number }, x: number) => number} = { y: 'foo', f };
-    let obj3: {wrongName: number, f: (this: { y: number }, x: number) => number} = { wrongName: 12, f };
+    function voidThisSpecified(this: void, x: number): number {
+        return x + this.notSpecified;
+    }
+    let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
+    let wrongPropertyType: {y: string, f: (this: { y: number }, x: number) => number} = { y: 'foo', f };
+    let wrongPropertyName: {wrongName: number, f: (this: { y: number }, x: number) => number} = { wrongName: 12, f };
     
-    obj.f(13, 'nope');
-    obj.f(13);
-    obj.f('nope');
-          ~~~~~~
+    ok.f(13);
+    ok.f('wrong type');
+         ~~~~~~~~~~~~
 !!! error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
-    obj2.f(13);
-    ~~~~
+    ok.f(13, 'too many arguments');
+    wrongPropertyType.f(13);
+    ~~~~~~~~~~~~~~~~~
 !!! error TS2345: Argument of type '{ y: string; f: (this: { y: number; }, x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
 !!! error TS2345:   Types of property 'y' are incompatible.
 !!! error TS2345:     Type 'string' is not assignable to type 'number'.
-    obj3.f(13);
-    ~~~~
+    wrongPropertyName.f(13);
+    ~~~~~~~~~~~~~~~~~
 !!! error TS2345: Argument of type '{ wrongName: number; f: (this: { y: number; }, x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
 !!! error TS2345:   Property 'y' is missing in type '{ wrongName: number; f: (this: { y: number; }, x: number) => number; }'.
     
