@@ -8652,8 +8652,7 @@ namespace ts {
             }
 
             // If the call is incomplete, we should skip the lower bound check.
-            // TODO: Check for 'this' not '__missing'
-            const hasEnoughArguments = adjustedArgCount >= signature.minArgumentCount - (signature.parameters && signature.parameters.length && signature.parameters[0] && signature.parameters[0].name == "__missing" ? 1 : 0);
+            const hasEnoughArguments = adjustedArgCount >= signature.minArgumentCount - (signature.parameters && signature.parameters.length && signature.parameters[0] && signature.parameters[0].name == "this" ? 1 : 0);
             return callIsIncomplete || hasEnoughArguments;
         }
 
@@ -8779,17 +8778,17 @@ namespace ts {
         }
 
         function checkApplicableSignature(node: CallLikeExpression, args: Expression[], signature: Signature, relation: Map<RelationComparisonResult>, excludeArgument: boolean[], reportErrors: boolean) {
-            const hasThisType = signature.parameters && signature.parameters.length && signature.parameters[0] && signature.parameters[0].name == "__missing";
+            const hasThisType = signature.parameters && signature.parameters.length && signature.parameters[0] && signature.parameters[0].name == "this";
             const thisTypeOffset = hasThisType ? 1 : 0;
             const argCount = getEffectiveArgumentCount(node, args, signature);
             for (let i = 0; i < argCount + thisTypeOffset; i++) {
                 // TODO: node, of course, might not be of the form `obj.method`
-                const arg = i==0 && hasThisType ? (<PropertyAccessExpression>(<CallExpression>node).expression).expression : getEffectiveArgument(node, args, i - thisTypeOffset);
+                const arg = i == 0 && hasThisType ? (<PropertyAccessExpression>(<CallExpression>node).expression).expression : getEffectiveArgument(node, args, i - thisTypeOffset);
                 // If the effective argument is 'undefined', then it is an argument that is present but is synthetic.
                 if (arg === undefined || arg.kind !== SyntaxKind.OmittedExpression) {
                     // Check spread elements against rest type (from arity check we know spread argument corresponds to a rest parameter)
                     const paramType = getTypeAtPosition(signature, i);
-                    let argType = i==0 && hasThisType ? getTypeOfNode(arg) : getEffectiveArgumentType(node, i - thisTypeOffset, arg);
+                    let argType = i == 0 && hasThisType ? getTypeOfNode(arg) : getEffectiveArgumentType(node, i - thisTypeOffset, arg);
 
                     // If the effective argument type is 'undefined', there is no synthetic type
                     // for the argument. In that case, we should check the argument.

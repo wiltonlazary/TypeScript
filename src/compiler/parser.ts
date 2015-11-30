@@ -2028,8 +2028,8 @@ namespace ts {
         function parseParameter(): ParameterDeclaration {
             const node = <ParameterDeclaration>createNode(SyntaxKind.Parameter);
             if (token === SyntaxKind.ThisKeyword) {
-                // CHEAT: pretend `this` is an identifier even though it isn't
-                node.name = parseTokenNode<Identifier>();
+                // CHEAT: create an identifier directly with isIdentifier:true even though it's not
+                node.name = createIdentifier(/*isIdentifier*/true, undefined);
             }
             else {
                 node.decorators = parseDecorators();
