@@ -2033,8 +2033,8 @@ namespace ts {
 
             // FormalParameter [Yield,Await]:
             //      BindingElement[?Yield,?Await]
-            node.name = token === SyntaxKind.ThisKeyword ? 
-                createIdentifier(/*isIdentifier*/true, undefined) : 
+            node.name = token === SyntaxKind.ThisKeyword ?
+                createIdentifier(/*isIdentifier*/true, undefined) :
                 parseIdentifierOrPattern();
 
             if (getFullWidth(node.name) === 0 && node.flags === 0 && isModifierKind(token)) {
