@@ -8652,7 +8652,8 @@ namespace ts {
             }
 
             // If the call is incomplete, we should skip the lower bound check.
-            const hasEnoughArguments = adjustedArgCount >= signature.minArgumentCount;
+            // TODO: Check for 'this' not '__missing'
+            const hasEnoughArguments = adjustedArgCount >= signature.minArgumentCount - (signature.parameters && signature.parameters.length && signature.parameters[0] && signature.parameters[0].name == "__missing" ? 1 : 0);
             return callIsIncomplete || hasEnoughArguments;
         }
 
@@ -8778,25 +8779,28 @@ namespace ts {
         }
 
         function checkApplicableSignature(node: CallLikeExpression, args: Expression[], signature: Signature, relation: Map<RelationComparisonResult>, excludeArgument: boolean[], reportErrors: boolean) {
+            const hasThisType = signature.parameters && signature.parameters.length && signature.parameters[0] && signature.parameters[0].name == "__missing";
+            const thisTypeOffset = hasThisType ? 1 : 0;
             const argCount = getEffectiveArgumentCount(node, args, signature);
-            for (let i = 0; i < argCount; i++) {
-                const arg = getEffectiveArgument(node, args, i);
+            for (let i = 0; i < argCount + thisTypeOffset; i++) {
+                // TODO: node, of course, might not be of the form `obj.method`
+                const arg = i==0 && hasThisType ? (<PropertyAccessExpression>(<CallExpression>node).expression).expression : getEffectiveArgument(node, args, i - thisTypeOffset);
                 // If the effective argument is 'undefined', then it is an argument that is present but is synthetic.
                 if (arg === undefined || arg.kind !== SyntaxKind.OmittedExpression) {
                     // Check spread elements against rest type (from arity check we know spread argument corresponds to a rest parameter)
                     const paramType = getTypeAtPosition(signature, i);
-                    let argType = getEffectiveArgumentType(node, i, arg);
+                    let argType = i==0 && hasThisType ? getTypeOfNode(arg) : getEffectiveArgumentType(node, i - thisTypeOffset, arg);
 
                     // If the effective argument type is 'undefined', there is no synthetic type
                     // for the argument. In that case, we should check the argument.
                     if (argType === undefined) {
                         argType = arg.kind === SyntaxKind.StringLiteral && !reportErrors
                             ? getStringLiteralType(<StringLiteral>arg)
-                            : checkExpressionWithContextualType(arg, paramType, excludeArgument && excludeArgument[i] ? identityMapper : undefined);
+                            : checkExpressionWithContextualType(arg, paramType, excludeArgument && excludeArgument[i - thisTypeOffset] ? identityMapper : undefined);
                     }
 
                     // Use argument expression as error location when reporting errors
-                    const errorNode = reportErrors ? getEffectiveArgumentErrorNode(node, i, arg) : undefined;
+                    const errorNode = reportErrors ? getEffectiveArgumentErrorNode(node, i - thisTypeOffset, arg) : undefined;
                     const headMessage = Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1;
                     if (!checkTypeRelatedTo(argType, paramType, relation, errorNode, headMessage)) {
                         return false;
