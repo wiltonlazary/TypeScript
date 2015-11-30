@@ -6888,6 +6888,14 @@ namespace ts {
                 const symbol = getSymbolOfNode(container.parent);
                 return container.flags & NodeFlags.Static ? getTypeOfSymbol(symbol) : (<InterfaceType>getDeclaredTypeOfSymbol(symbol)).thisType;
             }
+            if (isFunctionLike(container) &&
+                container.parameters &&
+                container.parameters.length &&
+                container.parameters[0].name.kind === SyntaxKind.Identifier &&
+                (<Identifier>container.parameters[0].name).text === "this") {
+                const symbol = getSymbolOfNode(container.parameters[0]);
+                return getTypeOfSymbol(symbol);
+            }
             return anyType;
         }
 
