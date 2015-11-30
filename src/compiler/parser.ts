@@ -2027,7 +2027,7 @@ namespace ts {
 
         function parseParameter(): ParameterDeclaration {
             const node = <ParameterDeclaration>createNode(SyntaxKind.Parameter);
-            if(token === SyntaxKind.ThisKeyword) {
+            if (token === SyntaxKind.ThisKeyword) {
                 // CHEAT: pretend `this` is an identifier even though it isn't
                 node.name = parseTokenNode<Identifier>();
             }
