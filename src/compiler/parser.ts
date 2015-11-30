@@ -2027,19 +2027,15 @@ namespace ts {
 
         function parseParameter(): ParameterDeclaration {
             const node = <ParameterDeclaration>createNode(SyntaxKind.Parameter);
-            if (token === SyntaxKind.ThisKeyword) {
-                // CHEAT: create an identifier directly with isIdentifier:true even though it's not
-                node.name = createIdentifier(/*isIdentifier*/true, undefined);
-            }
-            else {
-                node.decorators = parseDecorators();
-                setModifiers(node, parseModifiers());
-                node.dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
+            node.decorators = parseDecorators();
+            setModifiers(node, parseModifiers());
+            node.dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
 
-                // FormalParameter [Yield,Await]:
-                //      BindingElement[?Yield,?Await]
-                node.name = parseIdentifierOrPattern();
-            }
+            // FormalParameter [Yield,Await]:
+            //      BindingElement[?Yield,?Await]
+            node.name = token === SyntaxKind.ThisKeyword ? 
+                createIdentifier(/*isIdentifier*/true, undefined) : 
+                parseIdentifierOrPattern();
 
             if (getFullWidth(node.name) === 0 && node.flags === 0 && isModifierKind(token)) {
                 // in cases like
