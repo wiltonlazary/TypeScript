@@ -5977,6 +5977,11 @@ namespace ts {
                     if (rootSymbol.parent && rootSymbol.parent.flags & (SymbolFlags.Class | SymbolFlags.Interface)) {
                         getPropertySymbolsFromBaseTypes(rootSymbol.parent, rootSymbol.getName(), result);
                     }
+
+                    // TODO (yuisu): add Comment
+                    if (rootSymbol.valueDeclaration.kind === SyntaxKind.ShorthandPropertyAssignment) {
+                        result.push(typeChecker.getShorthandAssignmentValueSymbol(rootSymbol.valueDeclaration));
+                    }
                 });
 
                 return result;
