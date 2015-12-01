@@ -6910,10 +6910,6 @@ namespace ts {
                 captureLexicalThis(node, container);
             }
 
-            if (isClassLike(container.parent)) {
-                const symbol = getSymbolOfNode(container.parent);
-                return container.flags & NodeFlags.Static ? getTypeOfSymbol(symbol) : (<InterfaceType>getDeclaredTypeOfSymbol(symbol)).thisType;
-            }
             if (isFunctionLike(container) &&
                 container.parameters &&
                 container.parameters.length &&
@@ -6922,6 +6918,11 @@ namespace ts {
                 const symbol = getSymbolOfNode(container.parameters[0]);
                 return getTypeOfSymbol(symbol);
             }
+            if (isClassLike(container.parent)) {
+                const symbol = getSymbolOfNode(container.parent);
+                return container.flags & NodeFlags.Static ? getTypeOfSymbol(symbol) : (<InterfaceType>getDeclaredTypeOfSymbol(symbol)).thisType;
+            }
+
             return anyType;
         }
 
