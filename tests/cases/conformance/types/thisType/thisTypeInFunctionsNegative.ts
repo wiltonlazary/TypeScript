@@ -18,7 +18,7 @@ class C {
 }
 class D {
 	x: number;
-	thisPassthrough(this: this, m: number): number {
+	explicitThis(this: this, m: number): number {
 		return this.x + m;
 	}
 	explicitD(this: D, m: number): number {
@@ -85,9 +85,17 @@ let reconstructed: {
 // lambdas have this: void for assignability purposes (and this unbound (free) for body checking)
 let d = new D();
 let explicitXProperty: (this: { x: number }, m: number) => number;
-c.explicitC = n => n;
-c.explicitThis = n => n;
-c.explicitProperty = n => n;
+c.explicitC = m => m;
+c.explicitThis = m => m;
+c.explicitProperty = m => m;
+
+// can't refer to this within lambdas
+c.explicitC = m => m + this.n;
+c.explicitThis = m => m + this.n;
+c.explicitProperty = m => m + this.n;
+
+// can't name parameters 'this' in a lambda.
+c.explicitProperty = (this, m) => m + this.n;
 
 // from differing object types
 c.explicitC = function(this: D, m: number) { return this.x + m };
@@ -95,11 +103,14 @@ c.explicitProperty = explicitXProperty;
 
 c.explicitC = d.implicitD;
 c.explicitC = d.explicitD;
-c.explicitC = d.thisPassthrough;
+c.explicitC = d.explicitThis;
 c.explicitThis = d.implicitD;
 c.explicitThis = d.explicitD;
-c.explicitThis = d.thisPassthrough;
+c.explicitThis = d.explicitThis;
 c.explicitProperty = d.explicitD;
 c.explicitProperty = d.implicitD;
-c.explicitThis = d.thisPassthrough;
+c.explicitThis = d.explicitThis;
+c.explicitVoid = d.implicitD;
+c.explicitVoid = d.explicitD;
+c.explicitVoid = d.explicitThis;
 

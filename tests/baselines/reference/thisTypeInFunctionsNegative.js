@@ -1,4 +1,34 @@
 //// [thisTypeInFunctionsNegative.ts]
+class C {
+    n: number;
+    explicitThis(this: this, m: number): number {
+        return this.n + m;
+    }
+    implicitThis(m: number): number {
+        return this.n + m;
+    }
+    explicitC(this: C, m: number): number {
+        return this.n + m;
+    }
+    explicitProperty(this: {n: number}, m: number): number {
+        return this.n + m;
+    }
+    explicitVoid(this: void, m: number): number {
+		return this.n + m; // 'n' doesn't exist on type 'void'.
+    }
+}
+class D {
+	x: number;
+	explicitThis(this: this, m: number): number {
+		return this.x + m;
+	}
+	explicitD(this: D, m: number): number {
+		return this.x + m;
+	}
+	implicitD(m: number): number {
+		return this.x + m;
+	}
+}
 function f(this: { y: number }, x: number): number {
     return x + this.y;
 }
@@ -18,8 +48,111 @@ ok.f(13, 'too many arguments');
 wrongPropertyType.f(13);
 wrongPropertyName.f(13);
 
+let c = new C();
+c.explicitC();
+c.explicitC('wrong type');
+c.explicitC(13, 'too many arguments');
+c.explicitThis();
+c.explicitThis('wrong type 2');
+c.explicitThis(14, 'too many arguments 2');
+c.implicitThis();
+c.implicitThis('wrong type 2');
+c.implicitThis(14, 'too many arguments 2');
+c.explicitProperty();
+c.explicitProperty('wrong type 3');
+c.explicitProperty(15, 'too many arguments 3');
+
+// oops, this triggers contextual typing, which needs to be updated to understand that =>'s `this` is void.
+let voidToSpecified: (this: { y: number }, x: number) => number = x => x + this.y;
+let specifiedLambda: (this: void, x: number) => number = x => x + 12;
+let specifiedLambdaToSpecified: (this: {y: number}, x: number) => number = specifiedLambda;
+
+let reconstructed: { 
+    explicitProperty: (this: {n : number}, m: number) => number,
+    explicitC: (this: C, m: number) => number,
+    explicitThis: (this: this, m: number) => number,
+    implicitThis: (m: number) => number,
+    explicitVoid: (this: void, m: number) => number,
+    n: number,
+} = { 
+    explicitProperty: c.explicitProperty, 
+    explicitC: c.explicitC, 
+    explicitThis: c.explicitThis, 
+    implicitThis: c.implicitThis, 
+    explicitVoid: c.explicitVoid,
+    n: 12 
+};
+
+// lambdas have this: void for assignability purposes (and this unbound (free) for body checking)
+let d = new D();
+let explicitXProperty: (this: { x: number }, m: number) => number;
+c.explicitC = m => m;
+c.explicitThis = m => m;
+c.explicitProperty = m => m;
+
+// can't refer to this within lambdas
+c.explicitC = m => m + this.n;
+c.explicitThis = m => m + this.n;
+c.explicitProperty = m => m + this.n;
+
+// can't name parameters 'this' in a lambda.
+c.explicitProperty = (this, m) => m + this.n;
+
+// from differing object types
+c.explicitC = function(this: D, m: number) { return this.x + m };
+c.explicitProperty = explicitXProperty;
+
+c.explicitC = d.implicitD;
+c.explicitC = d.explicitD;
+c.explicitC = d.explicitThis;
+c.explicitThis = d.implicitD;
+c.explicitThis = d.explicitD;
+c.explicitThis = d.explicitThis;
+c.explicitProperty = d.explicitD;
+c.explicitProperty = d.implicitD;
+c.explicitThis = d.explicitThis;
+c.explicitVoid = d.implicitD;
+c.explicitVoid = d.explicitD;
+c.explicitVoid = d.explicitThis;
+
+
 
 //// [thisTypeInFunctionsNegative.js]
+var _this = this;
+var C = (function () {
+    function C() {
+    }
+    C.prototype.explicitThis = function (this, m) {
+        return this.n + m;
+    };
+    C.prototype.implicitThis = function (m) {
+        return this.n + m;
+    };
+    C.prototype.explicitC = function (this, m) {
+        return this.n + m;
+    };
+    C.prototype.explicitProperty = function (this, m) {
+        return this.n + m;
+    };
+    C.prototype.explicitVoid = function (this, m) {
+        return this.n + m; // 'n' doesn't exist on type 'void'.
+    };
+    return C;
+})();
+var D = (function () {
+    function D() {
+    }
+    D.prototype.explicitThis = function (this, m) {
+        return this.x + m;
+    };
+    D.prototype.explicitD = function (this, m) {
+        return this.x + m;
+    };
+    D.prototype.implicitD = function (m) {
+        return this.x + m;
+    };
+    return D;
+})();
 function f(this, x) {
     return x + this.y;
 }
@@ -37,3 +170,56 @@ ok.f('wrong type');
 ok.f(13, 'too many arguments');
 wrongPropertyType.f(13);
 wrongPropertyName.f(13);
+var c = new C();
+c.explicitC();
+c.explicitC('wrong type');
+c.explicitC(13, 'too many arguments');
+c.explicitThis();
+c.explicitThis('wrong type 2');
+c.explicitThis(14, 'too many arguments 2');
+c.implicitThis();
+c.implicitThis('wrong type 2');
+c.implicitThis(14, 'too many arguments 2');
+c.explicitProperty();
+c.explicitProperty('wrong type 3');
+c.explicitProperty(15, 'too many arguments 3');
+// oops, this triggers contextual typing, which needs to be updated to understand that =>'s `this` is void.
+var voidToSpecified = function (x) { return x + _this.y; };
+var specifiedLambda = function (x) { return x + 12; };
+var specifiedLambdaToSpecified = specifiedLambda;
+var reconstructed = {
+    explicitProperty: c.explicitProperty,
+    explicitC: c.explicitC,
+    explicitThis: c.explicitThis,
+    implicitThis: c.implicitThis,
+    explicitVoid: c.explicitVoid,
+    n: 12
+};
+// lambdas have this: void for assignability purposes (and this unbound (free) for body checking)
+var d = new D();
+var explicitXProperty;
+c.explicitC = function (m) { return m; };
+c.explicitThis = function (m) { return m; };
+c.explicitProperty = function (m) { return m; };
+// can't refer to this within lambdas
+c.explicitC = function (m) { return m + _this.n; };
+c.explicitThis = function (m) { return m + _this.n; };
+c.explicitProperty = function (m) { return m + _this.n; };
+// can't name parameters 'this' in a lambda.
+c.explicitProperty = (this, m);
+m + this.n;
+// from differing object types
+c.explicitC = function (this, m) { return this.x + m; };
+c.explicitProperty = explicitXProperty;
+c.explicitC = d.implicitD;
+c.explicitC = d.explicitD;
+c.explicitC = d.explicitThis;
+c.explicitThis = d.implicitD;
+c.explicitThis = d.explicitD;
+c.explicitThis = d.explicitThis;
+c.explicitProperty = d.explicitD;
+c.explicitProperty = d.implicitD;
+c.explicitThis = d.explicitThis;
+c.explicitVoid = d.implicitD;
+c.explicitVoid = d.explicitD;
+c.explicitVoid = d.explicitThis;

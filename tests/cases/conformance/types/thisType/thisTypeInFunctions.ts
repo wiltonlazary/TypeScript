@@ -13,6 +13,9 @@ class C {
     explicitProperty(this: {n: number}, m: number): number {
         return this.n + m;
     }
+    explicitVoid(this: void, m: number): number {
+        return m + 1;
+    }
 }
 class D extends C { }
 class B {
@@ -89,3 +92,5 @@ c.implicitThis = reconstructed.implicitThis;
 
 c.explicitC = function(this: B, m: number) { return this.n + m };
 
+// this:void compatibility
+c.explicitVoid = n => n;
