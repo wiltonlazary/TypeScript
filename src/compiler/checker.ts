@@ -5495,7 +5495,9 @@ namespace ts {
                 if (source === target) {
                     return Ternary.True;
                 }
-                if (!target.hasRestParameter && source.minArgumentCount > target.parameters.length) {
+                const sourceHasThisParameter = source.parameters.length && source.parameters[0].name === "this";
+                const targetHasThisParameter = target.parameters.length && target.parameters[0].name === "this";
+                if (!target.hasRestParameter && source.minArgumentCount + (targetHasThisParameter ? 1 : 0) > target.parameters.length + (sourceHasThisParameter ? 1 : 0)) {
                     return Ternary.False;
                 }
                 let sourceMax = source.parameters.length;
@@ -5517,14 +5519,38 @@ namespace ts {
                 else {
                     checkCount = sourceMax < targetMax ? sourceMax : targetMax;
                 }
+                if (sourceHasThisParameter || targetHasThisParameter) {
+                    // check `this` as an additional, first parameter
+                    checkCount++;
+                }
+                if (sourceHasThisParameter && targetHasThisParameter) {
+                    checkCount--;
+                }
                 // Spec 1.0 Section 3.8.3 & 3.8.4:
                 // M and N (the signatures) are instantiated using type Any as the type argument for all type parameters declared by M and N
                 source = getErasedSignature(source);
                 target = getErasedSignature(target);
                 let result = Ternary.True;
                 for (let i = 0; i < checkCount; i++) {
-                    const s = i < sourceMax ? getTypeOfSymbol(source.parameters[i]) : getRestTypeOfSignature(source);
-                    const t = i < targetMax ? getTypeOfSymbol(target.parameters[i]) : getRestTypeOfSignature(target);
+                    let s: Type;
+                    if (i < sourceMax) {
+                        if (targetHasThisParameter && !sourceHasThisParameter) {
+                            // if the other has but self does not, type is any (or void or this, but that's later)
+                            s = i == 0 ? anyType : getTypeOfSymbol(source.parameters[i - 1]);
+                        }
+                        else {
+                            s = getTypeOfSymbol(source.parameters[i]);
+                        }
+                    }
+                    else {
+                        s = getRestTypeOfSignature(source);
+                    }
+
+                    const t = i < targetMax ?
+                        (sourceHasThisParameter && !targetHasThisParameter) ?
+                            (i == 0 ? anyType : getTypeOfSymbol(source.parameters[i - 1])) :
+                            getTypeOfSymbol(target.parameters[i]) :
+                        getRestTypeOfSignature(target);
                     const saveErrorInfo = errorInfo;
                     let related = isRelatedTo(s, t, reportErrors);
                     if (!related) {
