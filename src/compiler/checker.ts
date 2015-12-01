@@ -9677,11 +9677,33 @@ namespace ts {
         }
 
         function assignContextualParameterTypes(signature: Signature, context: Signature, mapper: TypeMapper) {
-            const len = signature.parameters.length - (signature.hasRestParameter ? 1 : 0);
+            // TODO: It's possible there is a this type for a contextually-typed `function` and not one for the context.
+            const sigHasThisType = signature.parameters && signature.parameters.length && signature.parameters[0].name === "this";
+            const contextHasThisType = context.parameters && context.parameters.length && context.parameters[0].name === "this";
+            const thisTypeOffset = (contextHasThisType && !sigHasThisType ? 1 : 0);
+            const len = signature.parameters.length - (signature.hasRestParameter ? 1 : 0) + thisTypeOffset;
             for (let i = 0; i < len; i++) {
-                const parameter = signature.parameters[i];
-                const contextualParameterType = getTypeAtPosition(context, i);
-                assignTypeToParameterAndFixTypeParameters(parameter, contextualParameterType, mapper);
+                if (i === 0 && contextHasThisType && !sigHasThisType) {
+                    if (signature.declaration.kind === SyntaxKind.ArrowFunction) {
+                        // context[0] needs to be void, otherwise it's an error
+                        if (getTypeAtPosition(context, 0) !== voidType) {
+                            // report an error, `this` must be `:void`
+                            reportImplicitAnyError(signature.declaration, voidType); // yeah, this'll be fine.
+                        }
+                    }
+                    else {
+                        // ummm, add a parameter?? that would give us contextual typing of `this`. 
+                        // that's (1) hard (2) a possible breaking change
+                        // so I'll leave it off for the prototype
+                        // for now it's 'any', which means do nothing
+                        // TODO: This also isn't right for methods, (they need `this:this`) but those shouldn't be contextually typed. .. right?
+                    }
+                }
+                else {
+                    const parameter = signature.parameters[i - thisTypeOffset];
+                    const contextualParameterType = getTypeAtPosition(context, i);
+                    assignTypeToParameterAndFixTypeParameters(parameter, contextualParameterType, mapper);
+                }
             }
             if (signature.hasRestParameter && isRestParameterIndex(context, signature.parameters.length - 1)) {
                 const parameter = lastOrUndefined(signature.parameters);
