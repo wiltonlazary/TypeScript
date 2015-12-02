@@ -1874,7 +1874,7 @@ namespace ts {
         function parseTemplateExpression(): TemplateExpression {
             const template = <TemplateExpression>createNode(SyntaxKind.TemplateExpression);
 
-            template.head = parseLiteralNode();
+            template.head = parseTemplateLiteralFragment();
             Debug.assert(template.head.kind === SyntaxKind.TemplateHead, "Template head has wrong token kind");
 
             const templateSpans = <NodeArray<TemplateSpan>>[];
@@ -1895,22 +1895,34 @@ namespace ts {
             const span = <TemplateSpan>createNode(SyntaxKind.TemplateSpan);
             span.expression = allowInAnd(parseExpression);
 
-            let literal: LiteralExpression;
+            let literal: TemplateLiteralFragment;
 
             if (token === SyntaxKind.CloseBraceToken) {
                 reScanTemplateToken();
-                literal = parseLiteralNode();
+                literal = parseTemplateLiteralFragment();
             }
             else {
-                literal = <LiteralExpression>parseExpectedToken(SyntaxKind.TemplateTail, /*reportAtCurrentPosition*/ false, Diagnostics._0_expected, tokenToString(SyntaxKind.CloseBraceToken));
+                literal = <TemplateLiteralFragment>parseExpectedToken(SyntaxKind.TemplateTail, /*reportAtCurrentPosition*/ false, Diagnostics._0_expected, tokenToString(SyntaxKind.CloseBraceToken));
             }
 
             span.literal = literal;
             return finishNode(span);
         }
 
+        function parseStringLiteralTypeNode(): StringLiteralTypeNode {
+            return <StringLiteralTypeNode>parseLiteralLikeNode(SyntaxKind.StringLiteralType, /*internName*/ true);
+        }
+
         function parseLiteralNode(internName?: boolean): LiteralExpression {
-            const node = <LiteralExpression>createNode(token);
+            return <LiteralExpression>parseLiteralLikeNode(token, internName);
+        }
+
+        function parseTemplateLiteralFragment(): TemplateLiteralFragment {
+            return <TemplateLiteralFragment>parseLiteralLikeNode(token, /*internName*/ false);
+        }
+
+        function parseLiteralLikeNode(kind: SyntaxKind, internName: boolean): LiteralLikeNode {
+            const node = <LiteralExpression>createNode(kind);
             const text = scanner.getTokenValue();
             node.text = internName ? internIdentifier(text) : text;
 
@@ -2249,6 +2261,14 @@ namespace ts {
                 property.name = name;
                 property.questionToken = questionToken;
                 property.type = parseTypeAnnotation();
+
+                if (token === SyntaxKind.EqualsToken) {
+                    // Although type literal properties cannot not have initializers, we attempt
+                    // to parse an initializer so we can report in the checker that an interface
+                    // property or type literal property cannot have an initializer.
+                    property.initializer = parseNonParameterInitializer();
+                }
+
                 parseTypeMemberSemicolon();
                 return finishNode(property);
             }
@@ -2399,7 +2419,7 @@ namespace ts {
                     const node = tryParse(parseKeywordAndNoDot);
                     return node || parseTypeReferenceOrTypePredicate();
                 case SyntaxKind.StringLiteral:
-                    return <StringLiteral>parseLiteralNode(/*internName*/ true);
+                    return parseStringLiteralTypeNode();
                 case SyntaxKind.VoidKeyword:
                     return parseTokenNode<TypeNode>();
                 case SyntaxKind.ThisKeyword:
@@ -4892,7 +4912,7 @@ namespace ts {
 
                 if (!decorators) {
                     decorators = <NodeArray<Decorator>>[];
-                    decorators.pos = scanner.getStartPos();
+                    decorators.pos = decoratorStart;
                 }
 
                 const decorator = <Decorator>createNode(SyntaxKind.Decorator, decoratorStart);
@@ -5418,11 +5438,13 @@ namespace ts {
             // reference comment.
             while (true) {
                 const kind = triviaScanner.scan();
-                if (kind === SyntaxKind.WhitespaceTrivia || kind === SyntaxKind.NewLineTrivia || kind === SyntaxKind.MultiLineCommentTrivia) {
-                    continue;
-                }
                 if (kind !== SyntaxKind.SingleLineCommentTrivia) {
-                    break;
+                    if (isTrivia(kind)) {
+                        continue;
+                    }
+                    else {
+                        break;
+                    }
                 }
 
                 const range = { pos: triviaScanner.getTokenPos(), end: triviaScanner.getTextPos(), kind: triviaScanner.getToken() };
