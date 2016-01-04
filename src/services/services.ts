@@ -739,7 +739,10 @@ namespace ts {
         checker: TypeChecker;
         declaration: SignatureDeclaration;
         typeParameters: TypeParameter[];
+        // TODO: These are currently unused
         parameters: Symbol[];
+        thisTypeSymbol: Symbol;
+        thisType: Type;
         resolvedReturnType: Type;
         minArgumentCount: number;
         hasRestParameter: boolean;

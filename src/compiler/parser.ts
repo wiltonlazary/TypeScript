@@ -89,7 +89,6 @@ namespace ts {
                 return visitNodes(cbNodes, node.decorators) ||
                     visitNodes(cbNodes, node.modifiers) ||
                     visitNodes(cbNodes, (<SignatureDeclaration>node).typeParameters) ||
-                    visitNode(cbNode, (<SignatureDeclaration>node).thisType) ||
                     visitNodes(cbNodes, (<SignatureDeclaration>node).parameters) ||
                     visitNode(cbNode, (<SignatureDeclaration>node).type);
             case SyntaxKind.MethodDeclaration:
@@ -106,7 +105,6 @@ namespace ts {
                     visitNode(cbNode, (<FunctionLikeDeclaration>node).name) ||
                     visitNode(cbNode, (<FunctionLikeDeclaration>node).questionToken) ||
                     visitNodes(cbNodes, (<FunctionLikeDeclaration>node).typeParameters) ||
-                    visitNode(cbNode, (<FunctionLikeDeclaration>node).thisType) ||
                     visitNodes(cbNodes, (<FunctionLikeDeclaration>node).parameters) ||
                     visitNode(cbNode, (<FunctionLikeDeclaration>node).type) ||
                     visitNode(cbNode, (<ArrowFunction>node).equalsGreaterThanToken) ||
@@ -2025,7 +2023,7 @@ namespace ts {
         }
 
         function isStartOfParameter(): boolean {
-            return token === SyntaxKind.DotDotDotToken || isIdentifierOrPattern() || isModifierKind(token) || token === SyntaxKind.AtToken;
+            return token === SyntaxKind.DotDotDotToken || isIdentifierOrPattern() || isModifierKind(token) || token === SyntaxKind.AtToken || token === SyntaxKind.ThisKeyword;
         }
 
         function setModifiers(node: Node, modifiers: ModifiersArray) {
@@ -2037,6 +2035,12 @@ namespace ts {
 
         function parseParameter(): ParameterDeclaration {
             const node = <ParameterDeclaration>createNode(SyntaxKind.Parameter);
+            if (token === SyntaxKind.ThisKeyword) {
+                node.name = createIdentifier(/*isIdentifier*/true, undefined);
+                node.type = parseParameterType();
+                return finishNode(node);
+            }
+
             node.decorators = parseDecorators();
             setModifiers(node, parseModifiers());
             node.dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
@@ -2088,9 +2092,7 @@ namespace ts {
 
             const returnTokenRequired = returnToken === SyntaxKind.EqualsGreaterThanToken;
             signature.typeParameters = parseTypeParameters();
-            const [parameters, thisType] = parseParameterList(yieldContext, awaitContext, requireCompleteParameterList);
-            signature.parameters = parameters;
-            signature.thisType = thisType;
+            signature.parameters = parseParameterList(yieldContext, awaitContext, requireCompleteParameterList);
 
             if (returnTokenRequired) {
                 parseExpected(returnToken);
@@ -2101,8 +2103,7 @@ namespace ts {
             }
         }
 
-        function parseParameterList(yieldContext: boolean, awaitContext: boolean, requireCompleteParameterList: boolean):
-            [NodeArray<ParameterDeclaration>, TypeNode] {
+        function parseParameterList(yieldContext: boolean, awaitContext: boolean, requireCompleteParameterList: boolean) {
             // FormalParameters [Yield,Await]: (modified)
             //      [empty]
             //      FormalParameterList[?Yield,Await]
@@ -2123,8 +2124,6 @@ namespace ts {
                 setYieldContext(yieldContext);
                 setAwaitContext(awaitContext);
 
-                const thisType = parseOptional(SyntaxKind.ThisKeyword) ? parseParameterType() : undefined;
-                parseOptionalToken(SyntaxKind.CommaToken);
                 const result = parseDelimitedList(ParsingContext.Parameters, parseParameter);
 
                 setYieldContext(savedYieldContext);
@@ -2133,16 +2132,16 @@ namespace ts {
                 if (!parseExpected(SyntaxKind.CloseParenToken) && requireCompleteParameterList) {
                     // Caller insisted that we had to end with a )   We didn't.  So just return
                     // undefined here.
-                    return [undefined, undefined];
+                    return undefined;
                 }
 
-                return [result, thisType];
+                return result;
             }
 
             // We didn't even have an open paren.  If the caller requires a complete parameter list,
             // we definitely can't provide that.  However, if they're ok with an incomplete one,
             // then just return an empty set of parameters.
-            return [requireCompleteParameterList ? undefined : createMissingList<ParameterDeclaration>(), undefined];
+            return requireCompleteParameterList ? undefined : createMissingList<ParameterDeclaration>();
         }
 
         function parseTypeMemberSemicolon() {

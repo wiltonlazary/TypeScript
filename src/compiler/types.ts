@@ -546,7 +546,6 @@ namespace ts {
     export interface SignatureDeclaration extends Declaration {
         name?: PropertyName;
         typeParameters?: NodeArray<TypeParameterDeclaration>;
-        thisType?: TypeNode;
         parameters: NodeArray<ParameterDeclaration>;
         type?: TypeNode;
     }
@@ -2266,6 +2265,9 @@ namespace ts {
         declaration: SignatureDeclaration;  // Originating declaration
         typeParameters: TypeParameter[];    // Type parameters (undefined if non-generic)
         parameters: Symbol[];               // Parameters
+        thisTypeSymbol?: Symbol;            // symbol of this-type (undefined if not given)
+        /* @internal */
+        thisType: Type;                     // type of this-type
         /* @internal */
         resolvedReturnType: Type;           // Resolved return type
         /* @internal */

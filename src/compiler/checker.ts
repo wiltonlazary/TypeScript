@@ -129,8 +129,8 @@ namespace ts {
 
         const noConstraintType = createAnonymousType(undefined, emptySymbols, emptyArray, emptyArray, undefined, undefined);
 
-        const anySignature = createSignature(undefined, undefined, emptyArray, anyType, 0, /*hasRestParameter*/ false, /*hasStringLiterals*/ false);
-        const unknownSignature = createSignature(undefined, undefined, emptyArray, unknownType, 0, /*hasRestParameter*/ false, /*hasStringLiterals*/ false);
+        const anySignature = createSignature(undefined, undefined, emptyArray, undefined, anyType, 0, /*hasRestParameter*/ false, /*hasStringLiterals*/ false);
+        const unknownSignature = createSignature(undefined, undefined, emptyArray, undefined, unknownType, 0, /*hasRestParameter*/ false, /*hasStringLiterals*/ false);
 
         const globals: SymbolTable = {};
 
@@ -3401,12 +3401,13 @@ namespace ts {
             resolveObjectTypeMembers(type, source, typeParameters, typeArguments);
         }
 
-        function createSignature(declaration: SignatureDeclaration, typeParameters: TypeParameter[], parameters: Symbol[],
+        function createSignature(declaration: SignatureDeclaration, typeParameters: TypeParameter[], parameters: Symbol[], thisTypeSymbol: Symbol,
             resolvedReturnType: Type, minArgumentCount: number, hasRestParameter: boolean, hasStringLiterals: boolean): Signature {
             const sig = new Signature(checker);
             sig.declaration = declaration;
             sig.typeParameters = typeParameters;
             sig.parameters = parameters;
+            sig.thisTypeSymbol = thisTypeSymbol;
             sig.resolvedReturnType = resolvedReturnType;
             sig.minArgumentCount = minArgumentCount;
             sig.hasRestParameter = hasRestParameter;
@@ -3415,7 +3416,7 @@ namespace ts {
         }
 
         function cloneSignature(sig: Signature): Signature {
-            return createSignature(sig.declaration, sig.typeParameters, sig.parameters, sig.resolvedReturnType,
+            return createSignature(sig.declaration, sig.typeParameters, sig.parameters, sig.thisTypeSymbol, sig.resolvedReturnType,
                 sig.minArgumentCount, sig.hasRestParameter, sig.hasStringLiterals);
         }
 
@@ -3423,7 +3424,7 @@ namespace ts {
             const baseConstructorType = getBaseConstructorTypeOfClass(classType);
             const baseSignatures = getSignaturesOfType(baseConstructorType, SignatureKind.Construct);
             if (baseSignatures.length === 0) {
-                return [createSignature(undefined, classType.localTypeParameters, emptyArray, classType, 0, /*hasRestParameter*/ false, /*hasStringLiterals*/ false)];
+                return [createSignature(undefined, classType.localTypeParameters, emptyArray, undefined, classType, 0, /*hasRestParameter*/ false, /*hasStringLiterals*/ false)];
             }
             const baseTypeNode = getBaseTypeNodeOfClass(classType);
             const typeArguments = map(baseTypeNode.typeArguments, getTypeFromTypeNode);
@@ -3905,6 +3906,7 @@ namespace ts {
                 const parameters: Symbol[] = [];
                 let hasStringLiterals = false;
                 let minArgumentCount = -1;
+                let thisTypeSymbol: Symbol = undefined;
                 for (let i = 0, n = declaration.parameters.length; i < n; i++) {
                     const param = declaration.parameters[i];
                     let paramSymbol = param.symbol;
@@ -3913,14 +3915,22 @@ namespace ts {
                         const resolvedSymbol = resolveName(param, paramSymbol.name, SymbolFlags.Value, undefined, undefined);
                         paramSymbol = resolvedSymbol;
                     }
-                    parameters.push(paramSymbol);
+                    if (paramSymbol.name === "this") {
+                        thisTypeSymbol = paramSymbol;
+                        if (i !== 0) {
+                            error(param, Diagnostics.this_cannot_be_referenced_in_current_location);
+                        }
+                    }
+                    else {
+                        parameters.push(paramSymbol);
+                    }
                     if (param.type && param.type.kind === SyntaxKind.StringLiteralType) {
                         hasStringLiterals = true;
                     }
 
                     if (param.initializer || param.questionToken || param.dotDotDotToken) {
                         if (minArgumentCount < 0) {
-                            minArgumentCount = i;
+                            minArgumentCount = i - (thisTypeSymbol ? 1 : 0);
                         }
                     }
                     else {
@@ -3930,7 +3940,7 @@ namespace ts {
                 }
 
                 if (minArgumentCount < 0) {
-                    minArgumentCount = declaration.parameters.length;
+                    minArgumentCount = declaration.parameters.length - (thisTypeSymbol ? 1 : 0);
                 }
 
                 let returnType: Type;
@@ -3953,7 +3963,7 @@ namespace ts {
                     }
                 }
 
-                links.resolvedSignature = createSignature(declaration, typeParameters, parameters, returnType, minArgumentCount, hasRestParameter(declaration), hasStringLiterals);
+                links.resolvedSignature = createSignature(declaration, typeParameters, parameters, thisTypeSymbol, returnType, minArgumentCount, hasRestParameter(declaration), hasStringLiterals);
             }
             return links.resolvedSignature;
         }
@@ -4766,6 +4776,7 @@ namespace ts {
             }
             const result = createSignature(signature.declaration, freshTypeParameters,
                 instantiateList(signature.parameters, mapper, instantiateSymbol),
+                signature.thisTypeSymbol ? instantiateSymbol(signature.thisTypeSymbol, mapper) : undefined,
                 instantiateType(signature.resolvedReturnType, mapper),
                 signature.minArgumentCount, signature.hasRestParameter, signature.hasStringLiterals);
             result.target = signature;
@@ -5613,9 +5624,10 @@ namespace ts {
                 if (source === target) {
                     return Ternary.True;
                 }
-                const sourceHasThisParameter = source.parameters.length && source.parameters[0].name === "this";
-                const targetHasThisParameter = target.parameters.length && target.parameters[0].name === "this";
-                if (!target.hasRestParameter && source.minArgumentCount + (targetHasThisParameter ? 1 : 0) > target.parameters.length + (sourceHasThisParameter ? 1 : 0)) {
+                const sourceHasThisParameter = !!source.thisTypeSymbol;
+                const targetHasThisParameter = !!target.thisTypeSymbol;
+                // TODO: Pull out the ad-hoc in-loop code to ad-hoc code that lives outside the loop
+                if (!target.hasRestParameter && source.minArgumentCount > target.parameters.length) {
                     return Ternary.False;
                 }
                 let sourceMax = source.parameters.length;
@@ -5637,19 +5649,20 @@ namespace ts {
                 else {
                     checkCount = sourceMax < targetMax ? sourceMax : targetMax;
                 }
-                if (sourceHasThisParameter || targetHasThisParameter) {
-                    // check `this` as an additional, first parameter
-                    checkCount++;
+                if (source.thisTypeSymbol || target.thisTypeSymbol) {
+                    // check thisType separately
+                    // TODO: Don't default to any -- use `this` or `void` depending on whether it's a class-bound signature.
+                    const s: Type = target.thisTypeSymbol && !source.thisTypeSymbol ? anyType : getTypeOfSymbol(source.thisTypeSymbol);
+                    const t: Type = source.thisTypeSymbol && !target.thisTypeSymbol ? anyType : getTypeOfSymbol(target.thisTypeSymbol);
                 }
-                if (sourceHasThisParameter && targetHasThisParameter) {
-                    checkCount--;
-                }
+
                 // Spec 1.0 Section 3.8.3 & 3.8.4:
                 // M and N (the signatures) are instantiated using type Any as the type argument for all type parameters declared by M and N
                 source = getErasedSignature(source);
                 target = getErasedSignature(target);
                 let result = Ternary.True;
                 for (let i = 0; i < checkCount; i++) {
+                    // TODO: revert definitions of s and t to their one-line originals
                     let s: Type;
                     if (i < sourceMax) {
                         if (targetHasThisParameter && !sourceHasThisParameter) {
