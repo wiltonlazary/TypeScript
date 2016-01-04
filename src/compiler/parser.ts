@@ -89,6 +89,7 @@ namespace ts {
                 return visitNodes(cbNodes, node.decorators) ||
                     visitNodes(cbNodes, node.modifiers) ||
                     visitNodes(cbNodes, (<SignatureDeclaration>node).typeParameters) ||
+                    visitNode(cbNode, (<SignatureDeclaration>node).thisType) ||
                     visitNodes(cbNodes, (<SignatureDeclaration>node).parameters) ||
                     visitNode(cbNode, (<SignatureDeclaration>node).type);
             case SyntaxKind.MethodDeclaration:
@@ -105,6 +106,7 @@ namespace ts {
                     visitNode(cbNode, (<FunctionLikeDeclaration>node).name) ||
                     visitNode(cbNode, (<FunctionLikeDeclaration>node).questionToken) ||
                     visitNodes(cbNodes, (<FunctionLikeDeclaration>node).typeParameters) ||
+                    visitNode(cbNode, (<FunctionLikeDeclaration>node).thisType) ||
                     visitNodes(cbNodes, (<FunctionLikeDeclaration>node).parameters) ||
                     visitNode(cbNode, (<FunctionLikeDeclaration>node).type) ||
                     visitNode(cbNode, (<ArrowFunction>node).equalsGreaterThanToken) ||
@@ -1740,7 +1742,7 @@ namespace ts {
         };
 
         // Parses a comma-delimited list of elements
-        function parseDelimitedList<T extends Node>(kind: ParsingContext, parseElement: () => T, considerSemicolonAsDelimeter?: boolean): NodeArray<T> {
+        function parseDelimitedList<T extends Node>(kind: ParsingContext, parseElement: () => T, considerSemicolonAsDelimiter?: boolean): NodeArray<T> {
             const saveParsingContext = parsingContext;
             parsingContext |= 1 << kind;
             const result = <NodeArray<T>>[];
@@ -1769,7 +1771,7 @@ namespace ts {
                     // parse errors.  For example, this can happen when people do things like use
                     // a semicolon to delimit object literal members.   Note: we'll have already
                     // reported an error when we called parseExpected above.
-                    if (considerSemicolonAsDelimeter && token === SyntaxKind.SemicolonToken && !scanner.hasPrecedingLineBreak()) {
+                    if (considerSemicolonAsDelimiter && token === SyntaxKind.SemicolonToken && !scanner.hasPrecedingLineBreak()) {
                         nextToken();
                     }
                     continue;
@@ -2023,7 +2025,7 @@ namespace ts {
         }
 
         function isStartOfParameter(): boolean {
-            return token === SyntaxKind.DotDotDotToken || isIdentifierOrPattern() || isModifierKind(token) || token === SyntaxKind.AtToken || token === SyntaxKind.ThisKeyword;
+            return token === SyntaxKind.DotDotDotToken || isIdentifierOrPattern() || isModifierKind(token) || token === SyntaxKind.AtToken;
         }
 
         function setModifiers(node: Node, modifiers: ModifiersArray) {
@@ -2041,10 +2043,7 @@ namespace ts {
 
             // FormalParameter [Yield,Await]:
             //      BindingElement[?Yield,?Await]
-            node.name = token === SyntaxKind.ThisKeyword ?
-                createIdentifier(/*isIdentifier*/true, undefined) :
-                parseIdentifierOrPattern();
-
+            node.name = parseIdentifierOrPattern();
             if (getFullWidth(node.name) === 0 && node.flags === 0 && isModifierKind(token)) {
                 // in cases like
                 // 'use strict'
@@ -2057,7 +2056,6 @@ namespace ts {
                 nextToken();
             }
 
-            // TODO: this? should NOT be allowed. Seriously.
             node.questionToken = parseOptionalToken(SyntaxKind.QuestionToken);
             node.type = parseParameterType();
             node.initializer = parseBindingElementInitializer(/*inParameter*/ true);
@@ -2082,15 +2080,17 @@ namespace ts {
         }
 
         function fillSignature(
-                returnToken: SyntaxKind,
-                yieldContext: boolean,
-                awaitContext: boolean,
-                requireCompleteParameterList: boolean,
-                signature: SignatureDeclaration): void {
+            returnToken: SyntaxKind,
+            yieldContext: boolean,
+            awaitContext: boolean,
+            requireCompleteParameterList: boolean,
+            signature: SignatureDeclaration): void {
 
             const returnTokenRequired = returnToken === SyntaxKind.EqualsGreaterThanToken;
             signature.typeParameters = parseTypeParameters();
-            signature.parameters = parseParameterList(yieldContext, awaitContext, requireCompleteParameterList);
+            const [parameters, thisType] = parseParameterList(yieldContext, awaitContext, requireCompleteParameterList);
+            signature.parameters = parameters;
+            signature.thisType = thisType;
 
             if (returnTokenRequired) {
                 parseExpected(returnToken);
@@ -2101,7 +2101,8 @@ namespace ts {
             }
         }
 
-        function parseParameterList(yieldContext: boolean, awaitContext: boolean, requireCompleteParameterList: boolean) {
+        function parseParameterList(yieldContext: boolean, awaitContext: boolean, requireCompleteParameterList: boolean):
+            [NodeArray<ParameterDeclaration>, TypeNode] {
             // FormalParameters [Yield,Await]: (modified)
             //      [empty]
             //      FormalParameterList[?Yield,Await]
@@ -2122,6 +2123,8 @@ namespace ts {
                 setYieldContext(yieldContext);
                 setAwaitContext(awaitContext);
 
+                const thisType = parseOptional(SyntaxKind.ThisKeyword) ? parseParameterType() : undefined;
+                parseOptionalToken(SyntaxKind.CommaToken);
                 const result = parseDelimitedList(ParsingContext.Parameters, parseParameter);
 
                 setYieldContext(savedYieldContext);
@@ -2130,16 +2133,16 @@ namespace ts {
                 if (!parseExpected(SyntaxKind.CloseParenToken) && requireCompleteParameterList) {
                     // Caller insisted that we had to end with a )   We didn't.  So just return
                     // undefined here.
-                    return undefined;
+                    return [undefined, undefined];
                 }
 
-                return result;
+                return [result, thisType];
             }
 
             // We didn't even have an open paren.  If the caller requires a complete parameter list,
             // we definitely can't provide that.  However, if they're ok with an incomplete one,
             // then just return an empty set of parameters.
-            return requireCompleteParameterList ? undefined : createMissingList<ParameterDeclaration>();
+            return [requireCompleteParameterList ? undefined : createMissingList<ParameterDeclaration>(), undefined];
         }
 
         function parseTypeMemberSemicolon() {
@@ -2520,7 +2523,7 @@ namespace ts {
                 // ( ...
                 return true;
             }
-            if (token === SyntaxKind.ThisKeyword || isIdentifier() || isModifierKind(token)) {
+            if (isIdentifier() || isModifierKind(token) || token === SyntaxKind.ThisKeyword) {
                 nextToken();
                 if (token === SyntaxKind.ColonToken || token === SyntaxKind.CommaToken ||
                     token === SyntaxKind.QuestionToken || token === SyntaxKind.EqualsToken ||
@@ -3993,7 +3996,7 @@ namespace ts {
                 node.flags |= NodeFlags.MultiLine;
             }
 
-            node.properties = parseDelimitedList(ParsingContext.ObjectLiteralMembers, parseObjectLiteralElement, /*considerSemicolonAsDelimeter*/ true);
+            node.properties = parseDelimitedList(ParsingContext.ObjectLiteralMembers, parseObjectLiteralElement, /*considerSemicolonAsDelimiter*/ true);
             parseExpected(SyntaxKind.CloseBraceToken);
             return finishNode(node);
         }

@@ -546,6 +546,7 @@ namespace ts {
     export interface SignatureDeclaration extends Declaration {
         name?: PropertyName;
         typeParameters?: NodeArray<TypeParameterDeclaration>;
+        thisType?: TypeNode;
         parameters: NodeArray<ParameterDeclaration>;
         type?: TypeNode;
     }
