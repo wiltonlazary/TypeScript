@@ -99,7 +99,7 @@ namespace ts {
                 jsonContent = { typings: undefined };
             }
 
-            if (jsonContent.typings) {
+            if (typeof jsonContent.typings === "string") {
                 const result = loadNodeModuleFromFile(extensions, normalizePath(combinePaths(candidate, jsonContent.typings)), failedLookupLocation, host);
                 if (result) {
                     return result;
@@ -495,7 +495,7 @@ namespace ts {
                         const moduleNames = map(newSourceFile.imports, name => name.text);
                         const resolutions = resolveModuleNamesWorker(moduleNames, getNormalizedAbsolutePath(newSourceFile.fileName, currentDirectory));
                         // ensure that module resolution results are still correct
-                        for (let i = 0; i < moduleNames.length; ++i) {
+                        for (let i = 0; i < moduleNames.length; i++) {
                             const newResolution = resolutions[i];
                             const oldResolution = getResolvedModule(oldSourceFile, moduleNames[i]);
                             const resolutionChanged = oldResolution
@@ -523,7 +523,7 @@ namespace ts {
             }
 
             // update fileName -> file mapping
-            for (let i = 0, len = newSourceFiles.length; i < len; ++i) {
+            for (let i = 0, len = newSourceFiles.length; i < len; i++) {
                 filesByName.set(filePaths[i], newSourceFiles[i]);
             }
 
@@ -573,8 +573,11 @@ namespace ts {
             // If the noEmitOnError flag is set, then check if we have any errors so far.  If so,
             // immediately bail out.  Note that we pass 'undefined' for 'sourceFile' so that we
             // get any preEmit diagnostics, not just the ones
-            if (options.noEmitOnError && getPreEmitDiagnostics(program, /*sourceFile:*/ undefined, cancellationToken).length > 0) {
-                return { diagnostics: [], sourceMaps: undefined, emitSkipped: true };
+            if (options.noEmitOnError) {
+                const preEmitDiagnostics = getPreEmitDiagnostics(program, /*sourceFile:*/ undefined, cancellationToken);
+                if (preEmitDiagnostics.length > 0) {
+                    return { diagnostics: preEmitDiagnostics, sourceMaps: undefined, emitSkipped: true };
+                }
             }
 
             // Create the emit resolver outside of the "emitTime" tracking code below.  That way
@@ -661,19 +664,17 @@ namespace ts {
         }
 
         function getSemanticDiagnosticsForFile(sourceFile: SourceFile, cancellationToken: CancellationToken): Diagnostic[] {
-            // For JavaScript files, we don't want to report the normal typescript semantic errors.
-            // Instead, we just report errors for using TypeScript-only constructs from within a
-            // JavaScript file.
-            if (isSourceFileJavaScript(sourceFile)) {
-                return getJavaScriptSemanticDiagnosticsForFile(sourceFile, cancellationToken);
-            }
-
             return runWithCancellationToken(() => {
                 const typeChecker = getDiagnosticsProducingTypeChecker();
 
                 Debug.assert(!!sourceFile.bindDiagnostics);
                 const bindDiagnostics = sourceFile.bindDiagnostics;
-                const checkDiagnostics = typeChecker.getDiagnostics(sourceFile, cancellationToken);
+                // For JavaScript files, we don't want to report the normal typescript semantic errors.
+                // Instead, we just report errors for using TypeScript-only constructs from within a
+                // JavaScript file.
+                const checkDiagnostics = isSourceFileJavaScript(sourceFile) ?
+                    getJavaScriptSemanticDiagnosticsForFile(sourceFile, cancellationToken) :
+                    typeChecker.getDiagnostics(sourceFile, cancellationToken);
                 const fileProcessingDiagnosticsInFile = fileProcessingDiagnostics.getDiagnostics(sourceFile.fileName);
                 const programDiagnosticsInFile = programDiagnostics.getDiagnostics(sourceFile.fileName);
 
@@ -1072,13 +1073,15 @@ namespace ts {
                 file.resolvedModules = {};
                 const moduleNames = map(file.imports, name => name.text);
                 const resolutions = resolveModuleNamesWorker(moduleNames, getNormalizedAbsolutePath(file.fileName, currentDirectory));
-                for (let i = 0; i < file.imports.length; ++i) {
+                for (let i = 0; i < file.imports.length; i++) {
                     const resolution = resolutions[i];
                     setResolvedModule(file, moduleNames[i], resolution);
                     if (resolution && !options.noResolve) {
                         const importedFile = findSourceFile(resolution.resolvedFileName, toPath(resolution.resolvedFileName, currentDirectory, getCanonicalFileName), /*isDefaultLib*/ false, file, skipTrivia(file.text, file.imports[i].pos), file.imports[i].end);
 
                         if (importedFile && resolution.isExternalLibraryImport) {
+                            // Since currently irrespective of allowJs, we only look for supportedTypeScript extension external module files,
+                            // this check is ok. Otherwise this would be never true for javascript file
                             if (!isExternalModule(importedFile)) {
                                 const start = getTokenPosOfNode(file.imports[i], file);
                                 fileProcessingDiagnostics.add(createFileDiagnostic(file, start, file.imports[i].end - start, Diagnostics.Exported_external_package_typings_file_0_is_not_a_module_Please_contact_the_package_author_to_update_the_package_definition, importedFile.fileName));
@@ -1234,7 +1237,7 @@ namespace ts {
             else if (firstExternalModuleSourceFile && languageVersion < ScriptTarget.ES6 && !options.module) {
                 // We cannot use createDiagnosticFromNode because nodes do not have parents yet
                 const span = getErrorSpanForNode(firstExternalModuleSourceFile, firstExternalModuleSourceFile.externalModuleIndicator);
-                programDiagnostics.add(createFileDiagnostic(firstExternalModuleSourceFile, span.start, span.length, Diagnostics.Cannot_compile_modules_unless_the_module_flag_is_provided));
+                programDiagnostics.add(createFileDiagnostic(firstExternalModuleSourceFile, span.start, span.length, Diagnostics.Cannot_compile_modules_unless_the_module_flag_is_provided_Consider_setting_the_module_compiler_option_in_a_tsconfig_json_file));
             }
 
             // Cannot specify module gen target of es6 when below es6
