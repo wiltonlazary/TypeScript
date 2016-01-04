@@ -29,6 +29,9 @@ function noThisSpecified(x: number): number {
     // (until we add --noImplicitThisAny)
     return x + this.notSpecified;
 }
+function justThis(this: { y: number }): number {
+    return this.y;
+}
 
 // parameter checking
 let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
