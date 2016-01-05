@@ -28,15 +28,6 @@ class D {
 		return this.x + m;
 	}
 }
-///// parse errors /////
-declare function notFirst(a: number, this: C): number;
-declare function modifiers(async this: C): number;
-declare function restParam(...this: C): number;
-declare function optional(this?: C): number;
-declare function decorated(@deco() this: C): number;
-function initializer(this: C = new C()): number {
-    return this.n;
-}
 function f(this: { y: number }, x: number): number {
     return x + this.y;
 }
@@ -123,3 +114,13 @@ c.explicitVoid = d.implicitD;
 c.explicitVoid = d.explicitD;
 c.explicitVoid = d.explicitThis;
 
+
+///// parse errors /////
+declare function notFirst(a: number, this: C): number;
+declare function modifiers(async this: C): number;
+declare function restParam(...this: C): number;
+declare function optional(this?: C): number;
+declare function decorated(@deco() this: C): number;
+function initializer(this: C = new C()): number {
+    return this.n;
+}
