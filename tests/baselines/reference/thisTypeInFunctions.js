@@ -30,6 +30,9 @@ function noThisSpecified(x: number): number {
     // (until we add --noImplicitThisAny)
     return x + this.notSpecified;
 }
+function justThis(this: { y: number }): number {
+    return this.y;
+}
 
 // parameter checking
 let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
@@ -122,19 +125,19 @@ var C = (function () {
         return m + 1;
     };
     return C;
-})();
+}());
 var D = (function (_super) {
     __extends(D, _super);
     function D() {
         _super.apply(this, arguments);
     }
     return D;
-})(C);
+}(C));
 var B = (function () {
     function B() {
     }
     return B;
-})();
+}());
 function f(this, x) {
     return x + this.y;
 }
@@ -142,6 +145,9 @@ function noThisSpecified(x) {
     // for backward compatibility, this: any, so this is ok
     // (until we add --noImplicitThisAny)
     return x + this.notSpecified;
+}
+function justThis(this) {
+    return this.y;
 }
 // parameter checking
 var ok = { y: 12, f: f };
