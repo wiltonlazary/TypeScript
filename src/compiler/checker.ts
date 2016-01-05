@@ -3401,13 +3401,13 @@ namespace ts {
             resolveObjectTypeMembers(type, source, typeParameters, typeArguments);
         }
 
-        function createSignature(declaration: SignatureDeclaration, typeParameters: TypeParameter[], parameters: Symbol[], thisTypeSymbol: Symbol,
+        function createSignature(declaration: SignatureDeclaration, typeParameters: TypeParameter[], parameters: Symbol[], thisType: Symbol,
             resolvedReturnType: Type, minArgumentCount: number, hasRestParameter: boolean, hasStringLiterals: boolean): Signature {
             const sig = new Signature(checker);
             sig.declaration = declaration;
             sig.typeParameters = typeParameters;
             sig.parameters = parameters;
-            sig.thisTypeSymbol = thisTypeSymbol;
+            sig.thisType = thisType;
             sig.resolvedReturnType = resolvedReturnType;
             sig.minArgumentCount = minArgumentCount;
             sig.hasRestParameter = hasRestParameter;
@@ -3416,7 +3416,7 @@ namespace ts {
         }
 
         function cloneSignature(sig: Signature): Signature {
-            return createSignature(sig.declaration, sig.typeParameters, sig.parameters, sig.thisTypeSymbol, sig.resolvedReturnType,
+            return createSignature(sig.declaration, sig.typeParameters, sig.parameters, sig.thisType, sig.resolvedReturnType,
                 sig.minArgumentCount, sig.hasRestParameter, sig.hasStringLiterals);
         }
 
@@ -3906,7 +3906,7 @@ namespace ts {
                 const parameters: Symbol[] = [];
                 let hasStringLiterals = false;
                 let minArgumentCount = -1;
-                let thisTypeSymbol: Symbol = undefined;
+                let thisType: Symbol = undefined;
                 for (let i = 0, n = declaration.parameters.length; i < n; i++) {
                     const param = declaration.parameters[i];
                     let paramSymbol = param.symbol;
@@ -3916,7 +3916,7 @@ namespace ts {
                         paramSymbol = resolvedSymbol;
                     }
                     if (paramSymbol.name === "this") {
-                        thisTypeSymbol = paramSymbol;
+                        thisType = paramSymbol;
                         if (i !== 0) {
                             error(param, Diagnostics.this_cannot_be_referenced_in_current_location);
                         }
@@ -3930,7 +3930,7 @@ namespace ts {
 
                     if (param.initializer || param.questionToken || param.dotDotDotToken) {
                         if (minArgumentCount < 0) {
-                            minArgumentCount = i - (thisTypeSymbol ? 1 : 0);
+                            minArgumentCount = i - (thisType ? 1 : 0);
                         }
                     }
                     else {
@@ -3940,7 +3940,7 @@ namespace ts {
                 }
 
                 if (minArgumentCount < 0) {
-                    minArgumentCount = declaration.parameters.length - (thisTypeSymbol ? 1 : 0);
+                    minArgumentCount = declaration.parameters.length - (thisType ? 1 : 0);
                 }
 
                 let returnType: Type;
@@ -3963,7 +3963,7 @@ namespace ts {
                     }
                 }
 
-                links.resolvedSignature = createSignature(declaration, typeParameters, parameters, thisTypeSymbol, returnType, minArgumentCount, hasRestParameter(declaration), hasStringLiterals);
+                links.resolvedSignature = createSignature(declaration, typeParameters, parameters, thisType, returnType, minArgumentCount, hasRestParameter(declaration), hasStringLiterals);
             }
             return links.resolvedSignature;
         }
@@ -4776,7 +4776,7 @@ namespace ts {
             }
             const result = createSignature(signature.declaration, freshTypeParameters,
                 instantiateList(signature.parameters, mapper, instantiateSymbol),
-                signature.thisTypeSymbol ? instantiateSymbol(signature.thisTypeSymbol, mapper) : undefined,
+                signature.thisType ? instantiateSymbol(signature.thisType, mapper) : undefined,
                 instantiateType(signature.resolvedReturnType, mapper),
                 signature.minArgumentCount, signature.hasRestParameter, signature.hasStringLiterals);
             result.target = signature;
@@ -5627,8 +5627,8 @@ namespace ts {
                         related = isRelatedTo(targetType, sourceType, /*reportErrors*/ false);
                         if (!related) {
                             if (reportErrors) {
-                                reportError(Diagnostics.Types_of_parameters_0_and_1_are_incompatible, 
-                                    source ? source.name : "nope", 
+                                reportError(Diagnostics.Types_of_parameters_0_and_1_are_incompatible,
+                                    source ? source.name : "nope",
                                     target ? target.name : "nah");
                             }
                             return Ternary.False;
@@ -5637,8 +5637,8 @@ namespace ts {
                     return Ternary.True;
                 }
                 function getNumberOfParametersToCheck(source: Signature, target: Signature) {
-                    let sourceCount = source.parameters.length;
-                    let targetCount = target.parameters.length;
+                    const sourceCount = source.parameters.length;
+                    const targetCount = target.parameters.length;
                     if (source.hasRestParameter && target.hasRestParameter) {
                         return [Math.max(sourceCount, targetCount), sourceCount - 1, targetCount - 1];
                     }
@@ -5655,8 +5655,6 @@ namespace ts {
                 if (source === target) {
                     return Ternary.True;
                 }
-                const sourceHasThisParameter = !!source.thisTypeSymbol;
-                const targetHasThisParameter = !!target.thisTypeSymbol;
                 if (!target.hasRestParameter && source.minArgumentCount > target.parameters.length) {
                     return Ternary.False;
                 }
@@ -5666,19 +5664,19 @@ namespace ts {
                 source = getErasedSignature(source);
                 target = getErasedSignature(target);
                 let result = Ternary.True;
-                if (source.thisTypeSymbol || target.thisTypeSymbol) {
+                if (source.thisType || target.thisType) {
                     // TODO: Don't default to any -- use `this` or `void` depending on whether it's a class-bound signature.
-                    const s: Type = target.thisTypeSymbol && !source.thisTypeSymbol ? anyType : getTypeOfSymbol(source.thisTypeSymbol);
-                    const t: Type = source.thisTypeSymbol && !target.thisTypeSymbol ? anyType : getTypeOfSymbol(target.thisTypeSymbol);
+                    const s: Type = target.thisType && !source.thisType ? anyType : getTypeOfSymbol(source.thisType);
+                    const t: Type = source.thisType && !target.thisType ? anyType : getTypeOfSymbol(target.thisType);
                     const saveErrorInfo = errorInfo;
-                    const related = isParameterRelatedTo(source.thisTypeSymbol, target.thisTypeSymbol, s, t);
+                    const related = isParameterRelatedTo(source.thisType, target.thisType, s, t);
                     if (!related) {
                         return Ternary.False;
                     }
                     errorInfo = saveErrorInfo;
                     result &= related;
                 }
-                let [checkCount, sourceMax, targetMax] = getNumberOfParametersToCheck(source, target);
+                const [checkCount, sourceMax, targetMax] = getNumberOfParametersToCheck(source, target);
                 for (let i = 0; i < checkCount; i++) {
                     const s = i < sourceMax ? getTypeOfSymbol(source.parameters[i]) : getRestTypeOfSignature(source);
                     const t = i < targetMax ? getTypeOfSymbol(target.parameters[i]) : getRestTypeOfSignature(target);
@@ -7087,14 +7085,11 @@ namespace ts {
             if (needToCaptureLexicalThis) {
                 captureLexicalThis(node, container);
             }
-
-            if (isFunctionLike(container) &&
-                container.parameters &&
-                container.parameters.length &&
-                container.parameters[0].name.kind === SyntaxKind.Identifier &&
-                (<Identifier>container.parameters[0].name).text === "this") {
-                const symbol = getSymbolOfNode(container.parameters[0]);
-                return getTypeOfSymbol(symbol);
+            if (isFunctionLike(container)) {
+                const signature = getSignatureFromDeclaration(container);
+                if (signature.thisType) {
+                    return getTypeOfSymbol(signature.thisType);
+                }
             }
             if (isClassLike(container.parent)) {
                 const symbol = getSymbolOfNode(container.parent);
@@ -7106,7 +7101,7 @@ namespace ts {
             if (isInJavaScriptFile(node) && container.kind === SyntaxKind.FunctionExpression) {
                 if (getSpecialPropertyAssignmentKind(container.parent) === SpecialPropertyAssignmentKind.PrototypeProperty) {
                     // Get the 'x' of 'x.prototype.y = f' (here, 'f' is 'container')
-                    const className = (((container.parent as BinaryExpression)   // x.protoype.y = f
+                    const className = (((container.parent as BinaryExpression)   // x.prototype.y = f
                                         .left as PropertyAccessExpression)       // x.prototype.y
                                         .expression as PropertyAccessExpression) // x.prototype
                                         .expression;                             // x
