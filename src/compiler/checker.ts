@@ -8931,7 +8931,7 @@ namespace ts {
             }
 
             // If the call is incomplete, we should skip the lower bound check.
-            const hasEnoughArguments = adjustedArgCount >= signature.minArgumentCount - (signature.parameters && signature.parameters.length && signature.parameters[0] && signature.parameters[0].name == "this" ? 1 : 0);
+            const hasEnoughArguments = adjustedArgCount >= signature.minArgumentCount - (signature.thisType ? 1 : 0);
             return callIsIncomplete || hasEnoughArguments;
         }
 
@@ -9056,29 +9056,33 @@ namespace ts {
         }
 
         function checkApplicableSignature(node: CallLikeExpression, args: Expression[], signature: Signature, relation: Map<RelationComparisonResult>, excludeArgument: boolean[], reportErrors: boolean) {
-            const hasThisType = signature.parameters && signature.parameters.length && signature.parameters[0] && signature.parameters[0].name == "this";
-            const thisTypeOffset = hasThisType ? 1 : 0;
+            const headMessage = Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1;
+            if (signature.thisType) {
+                // TODO: node, of course, might not be of the form `obj.method` (should it default to void?)
+                const arg = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
+                if (!checkTypeRelatedTo(getTypeOfNode(arg), getTypeOfSymbol(signature.thisType), relation, arg, headMessage)) {
+                    return false;
+                }
+            }
             const argCount = getEffectiveArgumentCount(node, args, signature);
-            for (let i = 0; i < argCount + thisTypeOffset; i++) {
-                // TODO: node, of course, might not be of the form `obj.method`
-                const arg = i == 0 && hasThisType ? (<PropertyAccessExpression>(<CallExpression>node).expression).expression : getEffectiveArgument(node, args, i - thisTypeOffset);
+            for (let i = 0; i < argCount; i++) {
+                const arg = getEffectiveArgument(node, args, i); 
                 // If the effective argument is 'undefined', then it is an argument that is present but is synthetic.
                 if (arg === undefined || arg.kind !== SyntaxKind.OmittedExpression) {
                     // Check spread elements against rest type (from arity check we know spread argument corresponds to a rest parameter)
                     const paramType = getTypeAtPosition(signature, i);
-                    let argType = i == 0 && hasThisType ? getTypeOfNode(arg) : getEffectiveArgumentType(node, i - thisTypeOffset, arg);
+                    let argType = getEffectiveArgumentType(node, i, arg);
 
                     // If the effective argument type is 'undefined', there is no synthetic type
                     // for the argument. In that case, we should check the argument.
                     if (argType === undefined) {
                         argType = arg.kind === SyntaxKind.StringLiteral && !reportErrors
                             ? getStringLiteralTypeForText((<StringLiteral>arg).text)
-                            : checkExpressionWithContextualType(arg, paramType, excludeArgument && excludeArgument[i - thisTypeOffset] ? identityMapper : undefined);
+                            : checkExpressionWithContextualType(arg, paramType, excludeArgument && excludeArgument[i] ? identityMapper : undefined);
                     }
 
                     // Use argument expression as error location when reporting errors
-                    const errorNode = reportErrors ? getEffectiveArgumentErrorNode(node, i - thisTypeOffset, arg) : undefined;
-                    const headMessage = Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1;
+                    const errorNode = reportErrors ? getEffectiveArgumentErrorNode(node, i, arg) : undefined;
                     if (!checkTypeRelatedTo(argType, paramType, relation, errorNode, headMessage)) {
                         return false;
                     }
