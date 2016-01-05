@@ -9059,6 +9059,7 @@ namespace ts {
             const headMessage = Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1;
             if (signature.thisType) {
                 // TODO: node, of course, might not be of the form `obj.method` (should it default to void?)
+                // TODO: If signature.thisType is not defined, then strict mode says that it defaults to `void` or `this`.
                 const arg = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
                 if (!checkTypeRelatedTo(getTypeOfNode(arg), getTypeOfSymbol(signature.thisType), relation, arg, headMessage)) {
                     return false;
@@ -9066,7 +9067,7 @@ namespace ts {
             }
             const argCount = getEffectiveArgumentCount(node, args, signature);
             for (let i = 0; i < argCount; i++) {
-                const arg = getEffectiveArgument(node, args, i); 
+                const arg = getEffectiveArgument(node, args, i);
                 // If the effective argument is 'undefined', then it is an argument that is present but is synthetic.
                 if (arg === undefined || arg.kind !== SyntaxKind.OmittedExpression) {
                     // Check spread elements against rest type (from arity check we know spread argument corresponds to a rest parameter)
@@ -9939,33 +9940,28 @@ namespace ts {
         }
 
         function assignContextualParameterTypes(signature: Signature, context: Signature, mapper: TypeMapper) {
-            // TODO: It's possible there is a this type for a contextually-typed `function` and not one for the context.
-            const sigHasThisType = signature.parameters && signature.parameters.length && signature.parameters[0].name === "this";
-            const contextHasThisType = context.parameters && context.parameters.length && context.parameters[0].name === "this";
-            const thisTypeOffset = (contextHasThisType && !sigHasThisType ? 1 : 0);
-            const len = signature.parameters.length - (signature.hasRestParameter ? 1 : 0) + thisTypeOffset;
+            // TODO: Should a contextual type provide a default this-type (void/this) if it is not specified?
+            // I think it should be explicitly added to the contextual type when the contextual type is created.
+            // Somewhere else. 
+            if (context.thisType && !signature.thisType) {
+                const contextualThisType = getTypeOfSymbol(context.thisType);
+                if (signature.declaration.kind === SyntaxKind.ArrowFunction) {
+                    // thisType needs to be void, otherwise it's an error
+                    if (contextualThisType !== voidType) {
+                        // report an error, `this` must be `:void`
+                        // TODO:'this is implicitly of type any' is not precise -- should be 'this must be void for lambda'
+                        reportImplicitAnyError(signature.declaration, voidType);
+                    }
+                }
+                // NOTE: Probably isn't safe to modify signature at this point.
+                signature.thisType = cloneSymbol(context.thisType);
+                assignTypeToParameterAndFixTypeParameters(signature.thisType, contextualThisType, mapper);
+            }
+            const len = signature.parameters.length - (signature.hasRestParameter ? 1 : 0);
             for (let i = 0; i < len; i++) {
-                if (i === 0 && contextHasThisType && !sigHasThisType) {
-                    if (signature.declaration.kind === SyntaxKind.ArrowFunction) {
-                        // context[0] needs to be void, otherwise it's an error
-                        if (getTypeAtPosition(context, 0) !== voidType) {
-                            // report an error, `this` must be `:void`
-                            reportImplicitAnyError(signature.declaration, voidType); // yeah, this'll be fine.
-                        }
-                    }
-                    else {
-                        // ummm, add a parameter?? that would give us contextual typing of `this`. 
-                        // that's (1) hard (2) a possible breaking change
-                        // so I'll leave it off for the prototype
-                        // for now it's 'any', which means do nothing
-                        // TODO: This also isn't right for methods, (they need `this:this`) but those shouldn't be contextually typed. .. right?
-                    }
-                }
-                else {
-                    const parameter = signature.parameters[i - thisTypeOffset];
-                    const contextualParameterType = getTypeAtPosition(context, i);
-                    assignTypeToParameterAndFixTypeParameters(parameter, contextualParameterType, mapper);
-                }
+                const parameter = signature.parameters[i];
+                const contextualParameterType = getTypeAtPosition(context, i);
+                assignTypeToParameterAndFixTypeParameters(parameter, contextualParameterType, mapper);
             }
             if (signature.hasRestParameter && isRestParameterIndex(context, signature.parameters.length - 1)) {
                 const parameter = lastOrUndefined(signature.parameters);
