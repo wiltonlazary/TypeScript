@@ -3420,6 +3420,10 @@ namespace ts {
                 sig.minArgumentCount, sig.hasRestParameter, sig.hasStringLiterals);
         }
 
+        function getParameterTypeAtIndex(signature: Signature, i: number, max: number, outOfRangeType?: Type): Type {
+            return i < max ? getTypeOfSymbol(signature.parameters[i]) : (outOfRangeType || getRestTypeOfSignature(signature));
+        }
+
         function getDefaultConstructSignatures(classType: InterfaceType): Signature[] {
             const baseConstructorType = getBaseConstructorTypeOfClass(classType);
             const baseSignatures = getSignaturesOfType(baseConstructorType, SignatureKind.Construct);
@@ -4935,6 +4939,9 @@ namespace ts {
          */
         function isSignatureAssignableTo(source: Signature, target: Signature, ignoreReturnTypes: boolean): boolean {
             // TODO (drosen): De-duplicate code between related functions.
+            // A good place to start is 
+            // getNumNonRestParameters/getNumParametersToCheckForSignatureRelatability/
+            // getNumberOfParametersToCheck/forEachMatchingParameterType
             if (source === target) {
                 return true;
             }
@@ -4951,8 +4958,8 @@ namespace ts {
             const targetMax = getNumNonRestParameters(target);
             const checkCount = getNumParametersToCheckForSignatureRelatability(source, sourceMax, target, targetMax);
             for (let i = 0; i < checkCount; i++) {
-                const s = i < sourceMax ? getTypeOfSymbol(source.parameters[i]) : getRestTypeOfSignature(source);
-                const t = i < targetMax ? getTypeOfSymbol(target.parameters[i]) : getRestTypeOfSignature(target);
+                const s = getParameterTypeAtIndex(source, i, sourceMax);
+                const t = getParameterTypeAtIndex(target, i, targetMax);
                 const related = isTypeAssignableTo(t, s) || isTypeAssignableTo(s, t);
                 if (!related) {
                     return false;
@@ -5678,10 +5685,10 @@ namespace ts {
                 }
                 const [checkCount, sourceMax, targetMax] = getNumberOfParametersToCheck(source, target);
                 for (let i = 0; i < checkCount; i++) {
-                    const s = i < sourceMax ? getTypeOfSymbol(source.parameters[i]) : getRestTypeOfSignature(source);
-                    const t = i < targetMax ? getTypeOfSymbol(target.parameters[i]) : getRestTypeOfSignature(target);
+                    const s = getParameterTypeAtIndex(source, i, sourceMax);
+                    const t = getParameterTypeAtIndex(target, i, targetMax);
                     const saveErrorInfo = errorInfo;
-                    const related = isParameterRelatedTo(source.parameters[i < sourceMax ? i : sourceMax], target.parameters[i < targetMax ? i : sourceMax], s, t);
+                    const related = isParameterRelatedTo(source.parameters[Math.min(i, sourceMax)], target.parameters[Math.min(i, targetMax)], s, t);
                     if (!related) {
                         return Ternary.False;
                     }
@@ -6204,9 +6211,9 @@ namespace ts {
                 count = sourceMax < targetMax ? sourceMax : targetMax;
             }
             for (let i = 0; i < count; i++) {
-                const s = i < sourceMax ? getTypeOfSymbol(source.parameters[i]) : getRestTypeOfSignature(source);
-                const t = i < targetMax ? getTypeOfSymbol(target.parameters[i]) : getRestTypeOfSignature(target);
-                callback(s, t);
+                const s = getParameterTypeAtIndex(source, i, sourceMax);
+                const t = getParameterTypeAtIndex(target, i, targetMax);
+                callback(getParameterTypeAtIndex(source, i, sourceMax), getParameterTypeAtIndex(target, i, targetMax));
             }
         }
 
@@ -9927,8 +9934,8 @@ namespace ts {
 
         function getTypeAtPosition(signature: Signature, pos: number): Type {
             return signature.hasRestParameter ?
-                pos < signature.parameters.length - 1 ? getTypeOfSymbol(signature.parameters[pos]) : getRestTypeOfSignature(signature) :
-                pos < signature.parameters.length ? getTypeOfSymbol(signature.parameters[pos]) : anyType;
+                getParameterTypeAtIndex(signature, pos, signature.parameters.length - 1) :
+                getParameterTypeAtIndex(signature, pos, signature.parameters.length, anyType);
         }
 
         function assignContextualParameterTypes(signature: Signature, context: Signature, mapper: TypeMapper) {
