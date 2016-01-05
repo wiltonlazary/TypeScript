@@ -5621,39 +5621,44 @@ namespace ts {
              */
             function signatureRelatedTo(source: Signature, target: Signature, reportErrors: boolean): Ternary {
                 // TODO (drosen): De-duplicate code between related functions.
+                function isParameterRelatedTo(source: Symbol, target: Symbol, sourceType: Type, targetType: Type): Ternary {
+                    let related = isRelatedTo(sourceType, targetType, /*reportErrors*/ false);
+                    if (!related) {
+                        related = isRelatedTo(targetType, sourceType, /*reportErrors*/ false);
+                        if (!related) {
+                            if (reportErrors) {
+                                reportError(Diagnostics.Types_of_parameters_0_and_1_are_incompatible, 
+                                    source ? source.name : "nope", 
+                                    target ? target.name : "nah");
+                            }
+                            return Ternary.False;
+                        }
+                    }
+                    return Ternary.True;
+                }
+                function getNumberOfParametersToCheck(source: Signature, target: Signature) {
+                    let sourceCount = source.parameters.length;
+                    let targetCount = target.parameters.length;
+                    if (source.hasRestParameter && target.hasRestParameter) {
+                        return [Math.max(sourceCount, targetCount), sourceCount - 1, targetCount - 1];
+                    }
+                    else if (source.hasRestParameter) {
+                        return [targetCount, sourceCount - 1, targetCount];
+                    }
+                    else if (target.hasRestParameter) {
+                        return [sourceCount, sourceCount, targetCount - 1];
+                    }
+                    else {
+                        return [Math.min(sourceCount, targetCount), sourceCount, targetCount];
+                    }
+                }
                 if (source === target) {
                     return Ternary.True;
                 }
                 const sourceHasThisParameter = !!source.thisTypeSymbol;
                 const targetHasThisParameter = !!target.thisTypeSymbol;
-                // TODO: Pull out the ad-hoc in-loop code to ad-hoc code that lives outside the loop
                 if (!target.hasRestParameter && source.minArgumentCount > target.parameters.length) {
                     return Ternary.False;
-                }
-                let sourceMax = source.parameters.length;
-                let targetMax = target.parameters.length;
-                let checkCount: number;
-                if (source.hasRestParameter && target.hasRestParameter) {
-                    checkCount = sourceMax > targetMax ? sourceMax : targetMax;
-                    sourceMax--;
-                    targetMax--;
-                }
-                else if (source.hasRestParameter) {
-                    sourceMax--;
-                    checkCount = targetMax;
-                }
-                else if (target.hasRestParameter) {
-                    targetMax--;
-                    checkCount = sourceMax;
-                }
-                else {
-                    checkCount = sourceMax < targetMax ? sourceMax : targetMax;
-                }
-                if (source.thisTypeSymbol || target.thisTypeSymbol) {
-                    // check thisType separately
-                    // TODO: Don't default to any -- use `this` or `void` depending on whether it's a class-bound signature.
-                    const s: Type = target.thisTypeSymbol && !source.thisTypeSymbol ? anyType : getTypeOfSymbol(source.thisTypeSymbol);
-                    const t: Type = source.thisTypeSymbol && !target.thisTypeSymbol ? anyType : getTypeOfSymbol(target.thisTypeSymbol);
                 }
 
                 // Spec 1.0 Section 3.8.3 & 3.8.4:
@@ -5661,41 +5666,28 @@ namespace ts {
                 source = getErasedSignature(source);
                 target = getErasedSignature(target);
                 let result = Ternary.True;
-                for (let i = 0; i < checkCount; i++) {
-                    // TODO: revert definitions of s and t to their one-line originals
-                    let s: Type;
-                    if (i < sourceMax) {
-                        if (targetHasThisParameter && !sourceHasThisParameter) {
-                            // if the other has but self does not, type is any (or void or this, but that's later)
-                            s = i == 0 ? anyType : getTypeOfSymbol(source.parameters[i - 1]);
-                        }
-                        else {
-                            s = getTypeOfSymbol(source.parameters[i]);
-                        }
-                    }
-                    else {
-                        s = getRestTypeOfSignature(source);
-                    }
-
-                    const t = i < targetMax ?
-                        (sourceHasThisParameter && !targetHasThisParameter) ?
-                            (i == 0 ? anyType : getTypeOfSymbol(source.parameters[i - 1])) :
-                            getTypeOfSymbol(target.parameters[i]) :
-                        getRestTypeOfSignature(target);
+                if (source.thisTypeSymbol || target.thisTypeSymbol) {
+                    // TODO: Don't default to any -- use `this` or `void` depending on whether it's a class-bound signature.
+                    const s: Type = target.thisTypeSymbol && !source.thisTypeSymbol ? anyType : getTypeOfSymbol(source.thisTypeSymbol);
+                    const t: Type = source.thisTypeSymbol && !target.thisTypeSymbol ? anyType : getTypeOfSymbol(target.thisTypeSymbol);
                     const saveErrorInfo = errorInfo;
-                    let related = isRelatedTo(s, t, reportErrors);
+                    const related = isParameterRelatedTo(source.thisTypeSymbol, target.thisTypeSymbol, s, t);
                     if (!related) {
-                        related = isRelatedTo(t, s, /*reportErrors*/ false);
-                        if (!related) {
-                            if (reportErrors) {
-                                reportError(Diagnostics.Types_of_parameters_0_and_1_are_incompatible,
-                                    source.parameters[i < sourceMax ? i : sourceMax].name,
-                                    target.parameters[i < targetMax ? i : targetMax].name);
-                            }
-                            return Ternary.False;
-                        }
-                        errorInfo = saveErrorInfo;
+                        return Ternary.False;
                     }
+                    errorInfo = saveErrorInfo;
+                    result &= related;
+                }
+                let [checkCount, sourceMax, targetMax] = getNumberOfParametersToCheck(source, target);
+                for (let i = 0; i < checkCount; i++) {
+                    const s = i < sourceMax ? getTypeOfSymbol(source.parameters[i]) : getRestTypeOfSignature(source);
+                    const t = i < targetMax ? getTypeOfSymbol(target.parameters[i]) : getRestTypeOfSignature(target);
+                    const saveErrorInfo = errorInfo;
+                    const related = isParameterRelatedTo(source.parameters[i < sourceMax ? i : sourceMax], target.parameters[i < targetMax ? i : sourceMax], s, t);
+                    if (!related) {
+                        return Ternary.False;
+                    }
+                    errorInfo = saveErrorInfo;
                     result &= related;
                 }
 
