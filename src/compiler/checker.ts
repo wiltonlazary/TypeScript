@@ -5628,15 +5628,13 @@ namespace ts {
              */
             function signatureRelatedTo(source: Signature, target: Signature, reportErrors: boolean): Ternary {
                 // TODO (drosen): De-duplicate code between related functions.
-                function isParameterRelatedTo(source: Symbol, target: Symbol, sourceType: Type, targetType: Type): Ternary {
-                    let related = isRelatedTo(sourceType, targetType, /*reportErrors*/ false);
+                function isParameterRelatedTo(source: Type, target: Type, sourceName: string, targetName: string): Ternary {
+                    let related = isRelatedTo(source, target, reportErrors);
                     if (!related) {
-                        related = isRelatedTo(targetType, sourceType, /*reportErrors*/ false);
+                        related = isRelatedTo(target, source, /*reportErrors*/ false);
                         if (!related) {
                             if (reportErrors) {
-                                reportError(Diagnostics.Types_of_parameters_0_and_1_are_incompatible,
-                                    source ? source.name : "nope",
-                                    target ? target.name : "nah");
+                                reportError(Diagnostics.Types_of_parameters_0_and_1_are_incompatible, sourceName, targetName);
                             }
                             return Ternary.False;
                         }
@@ -5676,7 +5674,7 @@ namespace ts {
                     const s: Type = target.thisType && !source.thisType ? anyType : getTypeOfSymbol(source.thisType);
                     const t: Type = source.thisType && !target.thisType ? anyType : getTypeOfSymbol(target.thisType);
                     const saveErrorInfo = errorInfo;
-                    const related = isParameterRelatedTo(source.thisType, target.thisType, s, t);
+                    const related = isParameterRelatedTo(s, t, "this", "this");
                     if (!related) {
                         return Ternary.False;
                     }
@@ -5688,7 +5686,7 @@ namespace ts {
                     const s = getParameterTypeAtIndex(source, i, sourceMax);
                     const t = getParameterTypeAtIndex(target, i, targetMax);
                     const saveErrorInfo = errorInfo;
-                    const related = isParameterRelatedTo(source.parameters[Math.min(i, sourceMax)], target.parameters[Math.min(i, targetMax)], s, t);
+                    const related = isParameterRelatedTo(s, t, source.parameters[Math.min(i, sourceMax)].name, target.parameters[Math.min(i, targetMax)].name);
                     if (!related) {
                         return Ternary.False;
                     }
@@ -6211,8 +6209,6 @@ namespace ts {
                 count = sourceMax < targetMax ? sourceMax : targetMax;
             }
             for (let i = 0; i < count; i++) {
-                const s = getParameterTypeAtIndex(source, i, sourceMax);
-                const t = getParameterTypeAtIndex(target, i, targetMax);
                 callback(getParameterTypeAtIndex(source, i, sourceMax), getParameterTypeAtIndex(target, i, targetMax));
             }
         }
