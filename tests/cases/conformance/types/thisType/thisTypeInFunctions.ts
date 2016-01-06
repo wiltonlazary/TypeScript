@@ -21,6 +21,16 @@ class D extends C { }
 class B {
     n: number;
 }
+interface I {
+    a: number;
+    explicitVoid1(this: void): number;
+    explicitVoid2(this: void): number;
+    explicitStructural(this: {a: number}): number;
+    explicitInterface(this: I): number;
+    // explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
+    implicitMethod(): number; // defaults to `this` :(
+    implicitFunction: () => number;
+}
 function f(this: { y: number }, x: number): number {
     return x + this.y;
 }
@@ -31,6 +41,28 @@ function noThisSpecified(x: number): number {
 }
 function justThis(this: { y: number }): number {
     return this.y;
+}
+let impl: I = {
+    a: 12,
+    explicitVoid1() {
+        return this.a; // error, no 'a' in 'void'
+    },
+    explicitVoid2: () => this.a, // error, no 'a' in 'void'
+    explicitStructural() {
+        return this.a;
+    },
+    explicitInterface() {
+        return this.a;
+    },
+    //explicitThis() {
+        //return this.a;
+    //}
+    implicitMethod() {
+        return this.a;
+    },
+    implicitFunction() {
+        return this.a; // error, no 'a' in void
+    }
 }
 
 // parameter checking
