@@ -4890,7 +4890,7 @@ namespace ts {
         }
 
         function isContextSensitiveFunctionLikeDeclaration(node: FunctionLikeDeclaration) {
-            return !node.typeParameters && node.parameters.length && !forEach(node.parameters, p => p.type);
+            return !node.typeParameters && !forEach(node.parameters, p => p.type);
         }
 
         function getTypeWithoutSignatures(type: Type): Type {
