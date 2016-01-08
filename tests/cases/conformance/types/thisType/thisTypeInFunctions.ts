@@ -44,10 +44,8 @@ function justThis(this: { y: number }): number {
 }
 let impl: I = {
     a: 12,
-    explicitVoid1() {
-        return this.a; // error, no 'a' in 'void'
-    },
     explicitVoid2: () => this.a, // error, no 'a' in 'void'
+    explicitVoid1() { return 12; },
     explicitStructural() {
         return this.a;
     },
@@ -62,9 +60,15 @@ let impl: I = {
     },
     implicitFunction() {
         return this.a; // error, no 'a' in void
-    }
+    },
 }
-
+impl.explicitVoid1 = function () { return 12; };
+impl.explicitVoid2 = () => 12;
+impl.explicitStructural = function() { return this.a; };
+impl.explicitInterface = function() { return this.a; };
+// impl.explicitThis = function () { return this.a; };
+impl.implicitMethod = function () { return this.a; };
+impl.implicitFunction = function () { return this.a; }; // error, no 'a' in void
 // parameter checking
 let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
 let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: noThisSpecified };

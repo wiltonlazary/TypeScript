@@ -28,6 +28,30 @@ class D {
 		return this.x + m;
 	}
 }
+interface I {
+    a: number;
+    explicitVoid1(this: void): number;
+    explicitVoid2(this: void): number;
+    explicitStructural(this: {a: number}): number;
+    explicitInterface(this: I): number;
+    // explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
+    implicitMethod(): number; // defaults to `this` :(
+    implicitFunction: () => number;
+}
+let impl: I = {
+    a: 12,
+    explicitVoid1() {
+        return this.a; // error, no 'a' in 'void'
+    },
+    explicitVoid2: () => this.a, // error, no 'a' in 'void'
+    implicitFunction() {
+        return this.a; // error, no 'a' in void
+    },
+    explicitStructural: () => 12,
+    explicitInterface: () => 12,
+    implicitMethod: () => 12,
+    implicitFunction: () => 12
+}
 function f(this: { y: number }, x: number): number {
     return x + this.y;
 }
