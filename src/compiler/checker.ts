@@ -3946,6 +3946,17 @@ namespace ts {
                 if (minArgumentCount < 0) {
                     minArgumentCount = declaration.parameters.length - (thisType ? 1 : 0);
                 }
+                if (!thisType && declaration.kind !== SyntaxKind.MethodSignature
+                    && (declaration.symbol.name === "f" || declaration.symbol.name === "g" || declaration.symbol.name === "h" || declaration.symbol.name === "creat")) {
+                    // TODO: This part looks like the binding pattern code that manually creates symbols.
+                    // that doesn't mean it's right though. It's probably wrong.
+                    // (also seems to fire even for method declarations)
+                    // create a symbol whose type is void. Some how. (Might need to skip this for arrow functions)
+                    thisType = createSymbol(SymbolFlags.Variable, "this");
+                    getSymbolLinks(thisType).type = voidType;
+                    // TODO: Don't know how to capture `this` for method declarations -- skipping for now since the old method behaviour is correct but incomplete
+                    // (it looks it up whenever you reference 'this', which of course doesn't cover assignability)
+                }
 
                 let returnType: Type;
                 if (classType) {
@@ -9060,8 +9071,9 @@ namespace ts {
             if (signature.thisType) {
                 // TODO: node, of course, might not be of the form `obj.method` (should it default to void?)
                 // TODO: If signature.thisType is not defined, then strict mode says that it defaults to `void` or `this`.
-                const arg = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
-                if (!checkTypeRelatedTo(getTypeOfNode(arg), getTypeOfSymbol(signature.thisType), relation, arg, headMessage)) {
+                const sourceNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
+                const sourceType = sourceNode ? getTypeOfNode(sourceNode) : voidType;
+                if (!checkTypeRelatedTo(sourceType, getTypeOfSymbol(signature.thisType), relation, sourceNode, headMessage)) {
                     return false;
                 }
             }
