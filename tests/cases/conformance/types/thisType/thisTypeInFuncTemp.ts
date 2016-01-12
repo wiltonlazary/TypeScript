@@ -1,24 +1,22 @@
-function f(): number {
-	return this.a + 12; // error, 'a' not found in '{}' (void?)
+namespace creat {
+    export function g<T>(array: T[]) {
+        if (array.length === 0) {
+            return undefined;
+        }
+        return array[array.length - 1];
+    }
 }
-function g<T>(array: T[]): T {
-	if (array.length === 0) {
-		return undefined;
-	}
-	return array[array.length - 1];
-}
+
 class D {
 	constructor(public d: number = 12) {
 	}
+    f() {
+        return this.d;
+    }
 }
 class E {
-	creat(): D[] {
-		return [new D(), new D(), new D()];
-	}
 	h() {
-		const children = this.creat();
-		const child = g(children);
-		return child.d;
+		return creat.g([new D()]).f();
 	}
 }
 

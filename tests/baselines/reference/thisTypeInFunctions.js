@@ -22,23 +22,59 @@ class D extends C { }
 class B {
     n: number;
 }
+interface I {
+    a: number;
+    explicitVoid1(this: void): number;
+    explicitVoid2(this: void): number;
+    explicitStructural(this: {a: number}): number;
+    explicitInterface(this: I): number;
+    // explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
+    implicitMethod(): number; // defaults to `this` :(
+    implicitFunction: () => number;
+}
 function f(this: { y: number }, x: number): number {
     return x + this.y;
-}
-function noThisSpecified(x: number): number {
-    // for backward compatibility, this: any, so this is ok
-    // (until we add --noImplicitThisAny)
-    return x + this.notSpecified;
 }
 function justThis(this: { y: number }): number {
     return this.y;
 }
-
+function implicitThis(n: number): number {
+    return 12;
+}
+let impl: I = {
+    a: 12,
+    explicitVoid2: () => this.a, // ok, this: any because it refers to some outer object (window?)
+    explicitVoid1() { return 12; },
+    explicitStructural() {
+        return this.a;
+    },
+    explicitInterface() {
+        return this.a;
+    },
+    //explicitThis() {
+        //return this.a;
+    //}
+    implicitMethod() {
+        return this.a;
+    },
+    implicitFunction: () => this.a, // ok, this: any because it refers to some outer object (window?)
+}
+impl.explicitVoid1 = function () { return 12; };
+impl.explicitVoid2 = () => 12;
+impl.explicitStructural = function() { return this.a; };
+impl.explicitInterface = function() { return this.a; };
+impl.explicitStructural = () => 12;
+impl.explicitInterface = () => 12;
+// impl.explicitThis = function () { return this.a; };
+impl.implicitMethod = function () { return this.a; };
+impl.implicitFunction = function () { return this.a; }; // ok, this: any because it refers to some outer object (window?)
+impl.implicitMethod = () => 12;
+impl.implicitFunction = () => 12;
 // parameter checking
 let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
-let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: noThisSpecified };
+let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: implicitThis };
 ok.f(13);
-noThisSpecified(12);
+implicitThis(12);
 implicitAnyOk.f(12);
 
 let c = new C();
@@ -105,6 +141,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+var _this = this;
 // body checking
 var C = (function () {
     function C() {
@@ -141,19 +178,46 @@ var B = (function () {
 function f(this, x) {
     return x + this.y;
 }
-function noThisSpecified(x) {
-    // for backward compatibility, this: any, so this is ok
-    // (until we add --noImplicitThisAny)
-    return x + this.notSpecified;
-}
 function justThis(this) {
     return this.y;
 }
+function implicitThis(n) {
+    return 12;
+}
+var impl = {
+    a: 12,
+    explicitVoid2: function () { return _this.a; },
+    explicitVoid1: function () { return 12; },
+    explicitStructural: function () {
+        return this.a;
+    },
+    explicitInterface: function () {
+        return this.a;
+    },
+    //explicitThis() {
+    //return this.a;
+    //}
+    implicitMethod: function () {
+        return this.a;
+    },
+    implicitFunction: function () { return _this.a; }
+};
+impl.explicitVoid1 = function () { return 12; };
+impl.explicitVoid2 = function () { return 12; };
+impl.explicitStructural = function () { return this.a; };
+impl.explicitInterface = function () { return this.a; };
+impl.explicitStructural = function () { return 12; };
+impl.explicitInterface = function () { return 12; };
+// impl.explicitThis = function () { return this.a; };
+impl.implicitMethod = function () { return this.a; };
+impl.implicitFunction = function () { return this.a; }; // ok, this: any because it refers to some outer object (window?)
+impl.implicitMethod = function () { return 12; };
+impl.implicitFunction = function () { return 12; };
 // parameter checking
 var ok = { y: 12, f: f };
-var implicitAnyOk = { notSpecified: 12, f: noThisSpecified };
+var implicitAnyOk = { notSpecified: 12, f: implicitThis };
 ok.f(13);
-noThisSpecified(12);
+implicitThis(12);
 implicitAnyOk.f(12);
 var c = new C();
 var d = new D();

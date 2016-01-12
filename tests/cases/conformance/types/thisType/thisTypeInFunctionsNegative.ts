@@ -43,15 +43,20 @@ let impl: I = {
     explicitVoid1() {
         return this.a; // error, no 'a' in 'void'
     },
-    explicitVoid2: () => this.a, // error, no 'a' in 'void'
-    implicitFunction() {
-        return this.a; // error, no 'a' in void
-    },
+    explicitVoid2: () => this.a, // ok, `this:any` because it refers to an outer object
     explicitStructural: () => 12,
     explicitInterface: () => 12,
-    implicitMethod: () => 12,
+    implicitMethod() {
+        return this.a; // ok, I.a: number
+    },
     implicitFunction: () => 12
 }
+let implExplicitStructural = impl.explicitStructural;
+implExplicitStructural(); // error, no 'a' in 'void'
+let implExplicitInterface = impl.explicitInterface;
+implExplicitInterface(); // error, no 'a' in 'void' 
+let implImplicitMethod = impl.implicitMethod;
+implImplicitMethod(); // error, no 'a' in 'void'
 function f(this: { y: number }, x: number): number {
     return x + this.y;
 }
@@ -59,6 +64,10 @@ function propertyName(this: { y: number }, x: number): number {
     return x + this.notFound;
 }
 function voidThisSpecified(this: void, x: number): number {
+    return x + this.notSpecified;
+}
+function noThisSpecified(x: number): number {
+    // this:void unless loose-this is on
     return x + this.notSpecified;
 }
 let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };

@@ -29,6 +29,35 @@ class D {
 		return this.x + m;
 	}
 }
+interface I {
+    a: number;
+    explicitVoid1(this: void): number;
+    explicitVoid2(this: void): number;
+    explicitStructural(this: {a: number}): number;
+    explicitInterface(this: I): number;
+    // explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
+    implicitMethod(): number; // defaults to `this` :(
+    implicitFunction: () => number;
+}
+let impl: I = {
+    a: 12,
+    explicitVoid1() {
+        return this.a; // error, no 'a' in 'void'
+    },
+    explicitVoid2: () => this.a, // ok, `this:any` because it refers to an outer object
+    explicitStructural: () => 12,
+    explicitInterface: () => 12,
+    implicitMethod() {
+        return this.a; // ok, I.a: number
+    },
+    implicitFunction: () => 12
+}
+let implExplicitStructural = impl.explicitStructural;
+implExplicitStructural(); // error, no 'a' in 'void'
+let implExplicitInterface = impl.explicitInterface;
+implExplicitInterface(); // error, no 'a' in 'void' 
+let implImplicitMethod = impl.implicitMethod;
+implImplicitMethod(); // error, no 'a' in 'void'
 function f(this: { y: number }, x: number): number {
     return x + this.y;
 }
@@ -36,6 +65,10 @@ function propertyName(this: { y: number }, x: number): number {
     return x + this.notFound;
 }
 function voidThisSpecified(this: void, x: number): number {
+    return x + this.notSpecified;
+}
+function noThisSpecified(x: number): number {
+    // this:void unless loose-this is on
     return x + this.notSpecified;
 }
 let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
@@ -116,6 +149,15 @@ c.explicitVoid = d.explicitD;
 c.explicitVoid = d.explicitThis;
 
 
+///// parse errors /////
+declare function notFirst(a: number, this: C): number;
+declare function modifiers(async this: C): number;
+declare function restParam(...this: C): number;
+declare function optional(this?: C): number;
+declare function decorated(@deco() this: C): number;
+function initializer(this: C = new C()): number {
+    return this.n;
+}
 
 //// [thisTypeInFunctionsNegative.js]
 var _this = this;
@@ -138,7 +180,7 @@ var C = (function () {
         return this.n + m; // 'n' doesn't exist on type 'void'.
     };
     return C;
-})();
+}());
 var D = (function () {
     function D() {
     }
@@ -152,7 +194,26 @@ var D = (function () {
         return this.x + m;
     };
     return D;
-})();
+}());
+var impl = {
+    a: 12,
+    explicitVoid1: function () {
+        return this.a; // error, no 'a' in 'void'
+    },
+    explicitVoid2: function () { return _this.a; },
+    explicitStructural: function () { return 12; },
+    explicitInterface: function () { return 12; },
+    implicitMethod: function () {
+        return this.a; // ok, I.a: number
+    },
+    implicitFunction: function () { return 12; }
+};
+var implExplicitStructural = impl.explicitStructural;
+implExplicitStructural(); // error, no 'a' in 'void'
+var implExplicitInterface = impl.explicitInterface;
+implExplicitInterface(); // error, no 'a' in 'void' 
+var implImplicitMethod = impl.implicitMethod;
+implImplicitMethod(); // error, no 'a' in 'void'
 function f(this, x) {
     return x + this.y;
 }
@@ -160,6 +221,10 @@ function propertyName(this, x) {
     return x + this.notFound;
 }
 function voidThisSpecified(this, x) {
+    return x + this.notSpecified;
+}
+function noThisSpecified(x) {
+    // this:void unless loose-this is on
     return x + this.notSpecified;
 }
 var ok = { y: 12, f: f };
@@ -223,3 +288,8 @@ c.explicitThis = d.explicitThis;
 c.explicitVoid = d.implicitD;
 c.explicitVoid = d.explicitD;
 c.explicitVoid = d.explicitThis;
+new C();
+number;
+{
+    return this.n;
+}

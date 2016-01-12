@@ -76,6 +76,37 @@ class B {
     n: number;
 >n : number
 }
+interface I {
+>I : I
+
+    a: number;
+>a : number
+
+    explicitVoid1(this: void): number;
+>explicitVoid1 : () => number
+>this : void
+
+    explicitVoid2(this: void): number;
+>explicitVoid2 : () => number
+>this : void
+
+    explicitStructural(this: {a: number}): number;
+>explicitStructural : () => number
+>this : { a: number; }
+>a : number
+
+    explicitInterface(this: I): number;
+>explicitInterface : () => number
+>this : I
+>I : I
+
+    // explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
+    implicitMethod(): number; // defaults to `this` :(
+>implicitMethod : () => number
+
+    implicitFunction: () => number;
+>implicitFunction : () => number
+}
 function f(this: { y: number }, x: number): number {
 >f : (x: number) => number
 >this : { y: number; }
@@ -89,19 +120,6 @@ function f(this: { y: number }, x: number): number {
 >this : { y: number; }
 >y : number
 }
-function noThisSpecified(x: number): number {
->noThisSpecified : (x: number) => number
->x : number
-
-    // for backward compatibility, this: any, so this is ok
-    // (until we add --noImplicitThisAny)
-    return x + this.notSpecified;
->x + this.notSpecified : any
->x : number
->this.notSpecified : any
->this : any
->notSpecified : any
-}
 function justThis(this: { y: number }): number {
 >justThis : () => number
 >this : { y: number; }
@@ -112,6 +130,158 @@ function justThis(this: { y: number }): number {
 >this : { y: number; }
 >y : number
 }
+function implicitThis(n: number): number {
+>implicitThis : (n: number) => number
+>n : number
+
+    return 12;
+>12 : number
+}
+let impl: I = {
+>impl : I
+>I : I
+>{    a: 12,    explicitVoid2: () => this.a, // ok, this: any because it refers to some outer object (window?)    explicitVoid1() { return 12; },    explicitStructural() {        return this.a;    },    explicitInterface() {        return this.a;    },    //explicitThis() {        //return this.a;    //}    implicitMethod() {        return this.a;    },    implicitFunction: () => this.a, // ok, this: any because it refers to some outer object (window?)} : { a: number; explicitVoid2: () => any; explicitVoid1(): number; explicitStructural(): number; explicitInterface(): number; implicitMethod(): any; implicitFunction: () => any; }
+
+    a: 12,
+>a : number
+>12 : number
+
+    explicitVoid2: () => this.a, // ok, this: any because it refers to some outer object (window?)
+>explicitVoid2 : () => any
+>() => this.a : () => any
+>this.a : any
+>this : any
+>a : any
+
+    explicitVoid1() { return 12; },
+>explicitVoid1 : () => number
+>12 : number
+
+    explicitStructural() {
+>explicitStructural : () => number
+
+        return this.a;
+>this.a : number
+>this : { a: number; }
+>a : number
+
+    },
+    explicitInterface() {
+>explicitInterface : () => number
+
+        return this.a;
+>this.a : number
+>this : I
+>a : number
+
+    },
+    //explicitThis() {
+        //return this.a;
+    //}
+    implicitMethod() {
+>implicitMethod : () => any
+
+        return this.a;
+>this.a : any
+>this : any
+>a : any
+
+    },
+    implicitFunction: () => this.a, // ok, this: any because it refers to some outer object (window?)
+>implicitFunction : () => any
+>() => this.a : () => any
+>this.a : any
+>this : any
+>a : any
+}
+impl.explicitVoid1 = function () { return 12; };
+>impl.explicitVoid1 = function () { return 12; } : () => number
+>impl.explicitVoid1 : () => number
+>impl : I
+>explicitVoid1 : () => number
+>function () { return 12; } : () => number
+>12 : number
+
+impl.explicitVoid2 = () => 12;
+>impl.explicitVoid2 = () => 12 : () => number
+>impl.explicitVoid2 : () => number
+>impl : I
+>explicitVoid2 : () => number
+>() => 12 : () => number
+>12 : number
+
+impl.explicitStructural = function() { return this.a; };
+>impl.explicitStructural = function() { return this.a; } : () => number
+>impl.explicitStructural : () => number
+>impl : I
+>explicitStructural : () => number
+>function() { return this.a; } : () => number
+>this.a : number
+>this : { a: number; }
+>a : number
+
+impl.explicitInterface = function() { return this.a; };
+>impl.explicitInterface = function() { return this.a; } : () => number
+>impl.explicitInterface : () => number
+>impl : I
+>explicitInterface : () => number
+>function() { return this.a; } : () => number
+>this.a : number
+>this : I
+>a : number
+
+impl.explicitStructural = () => 12;
+>impl.explicitStructural = () => 12 : () => number
+>impl.explicitStructural : () => number
+>impl : I
+>explicitStructural : () => number
+>() => 12 : () => number
+>12 : number
+
+impl.explicitInterface = () => 12;
+>impl.explicitInterface = () => 12 : () => number
+>impl.explicitInterface : () => number
+>impl : I
+>explicitInterface : () => number
+>() => 12 : () => number
+>12 : number
+
+// impl.explicitThis = function () { return this.a; };
+impl.implicitMethod = function () { return this.a; };
+>impl.implicitMethod = function () { return this.a; } : () => any
+>impl.implicitMethod : () => number
+>impl : I
+>implicitMethod : () => number
+>function () { return this.a; } : () => any
+>this.a : any
+>this : any
+>a : any
+
+impl.implicitFunction = function () { return this.a; }; // ok, this: any because it refers to some outer object (window?)
+>impl.implicitFunction = function () { return this.a; } : () => any
+>impl.implicitFunction : () => number
+>impl : I
+>implicitFunction : () => number
+>function () { return this.a; } : () => any
+>this.a : any
+>this : any
+>a : any
+
+impl.implicitMethod = () => 12;
+>impl.implicitMethod = () => 12 : () => number
+>impl.implicitMethod : () => number
+>impl : I
+>implicitMethod : () => number
+>() => 12 : () => number
+>12 : number
+
+impl.implicitFunction = () => 12;
+>impl.implicitFunction = () => 12 : () => number
+>impl.implicitFunction : () => number
+>impl : I
+>implicitFunction : () => number
+>() => 12 : () => number
+>12 : number
 
 // parameter checking
 let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
@@ -126,16 +296,16 @@ let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f 
 >12 : number
 >f : (x: number) => number
 
-let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: noThisSpecified };
+let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: implicitThis };
 >implicitAnyOk : { notSpecified: number; f: (x: number) => number; }
 >notSpecified : number
 >f : (x: number) => number
 >x : number
->{ notSpecified: 12, f: noThisSpecified } : { notSpecified: number; f: (x: number) => number; }
+>{ notSpecified: 12, f: implicitThis } : { notSpecified: number; f: (n: number) => number; }
 >notSpecified : number
 >12 : number
->f : (x: number) => number
->noThisSpecified : (x: number) => number
+>f : (n: number) => number
+>implicitThis : (n: number) => number
 
 ok.f(13);
 >ok.f(13) : number
@@ -144,9 +314,9 @@ ok.f(13);
 >f : (x: number) => number
 >13 : number
 
-noThisSpecified(12);
->noThisSpecified(12) : number
->noThisSpecified : (x: number) => number
+implicitThis(12);
+>implicitThis(12) : number
+>implicitThis : (n: number) => number
 >12 : number
 
 implicitAnyOk.f(12);

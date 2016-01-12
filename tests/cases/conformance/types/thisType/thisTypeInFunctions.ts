@@ -34,17 +34,15 @@ interface I {
 function f(this: { y: number }, x: number): number {
     return x + this.y;
 }
-function noThisSpecified(x: number): number {
-    // for backward compatibility, this: any, so this is ok
-    // (until we add --noImplicitThisAny)
-    return x + this.notSpecified;
-}
 function justThis(this: { y: number }): number {
     return this.y;
 }
+function implicitThis(n: number): number {
+    return 12;
+}
 let impl: I = {
     a: 12,
-    explicitVoid2: () => this.a, // error, no 'a' in 'void'
+    explicitVoid2: () => this.a, // ok, this: any because it refers to some outer object (window?)
     explicitVoid1() { return 12; },
     explicitStructural() {
         return this.a;
@@ -58,22 +56,24 @@ let impl: I = {
     implicitMethod() {
         return this.a;
     },
-    implicitFunction() {
-        return this.a; // error, no 'a' in void
-    },
+    implicitFunction: () => this.a, // ok, this: any because it refers to some outer object (window?)
 }
 impl.explicitVoid1 = function () { return 12; };
 impl.explicitVoid2 = () => 12;
 impl.explicitStructural = function() { return this.a; };
 impl.explicitInterface = function() { return this.a; };
+impl.explicitStructural = () => 12;
+impl.explicitInterface = () => 12;
 // impl.explicitThis = function () { return this.a; };
 impl.implicitMethod = function () { return this.a; };
-impl.implicitFunction = function () { return this.a; }; // error, no 'a' in void
+impl.implicitFunction = function () { return this.a; }; // ok, this: any because it refers to some outer object (window?)
+impl.implicitMethod = () => 12;
+impl.implicitFunction = () => 12;
 // parameter checking
 let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
-let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: noThisSpecified };
+let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: implicitThis };
 ok.f(13);
-noThisSpecified(12);
+implicitThis(12);
 implicitAnyOk.f(12);
 
 let c = new C();
