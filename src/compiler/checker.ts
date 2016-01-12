@@ -3946,13 +3946,13 @@ namespace ts {
                 if (minArgumentCount < 0) {
                     minArgumentCount = declaration.parameters.length - (thisType ? 1 : 0);
                 }
-                if (!thisType && declaration.kind !== SyntaxKind.MethodSignature
-                    && (declaration.symbol.name === "f" || declaration.symbol.name === "g" || declaration.symbol.name === "h" || declaration.symbol.name === "creat")) {
+                if (!thisType && (declaration.kind === SyntaxKind.FunctionDeclaration || declaration.kind === SyntaxKind.CallSignature)) {
                     // TODO: This part looks like the binding pattern code that manually creates symbols.
                     // that doesn't mean it's right though. It's probably wrong.
-                    // (also seems to fire even for method declarations)
-                    // create a symbol whose type is void. Some how. (Might need to skip this for arrow functions)
+                    // Create a symbol whose type is void
                     thisType = createSymbol(SymbolFlags.Variable, "this");
+                    thisType.valueDeclaration = declaration; // hm. WRONG.
+                    thisType.declarations = [thisType.valueDeclaration];
                     getSymbolLinks(thisType).type = voidType;
                     // TODO: Don't know how to capture `this` for method declarations -- skipping for now since the old method behaviour is correct but incomplete
                     // (it looks it up whenever you reference 'this', which of course doesn't cover assignability)
@@ -9069,12 +9069,14 @@ namespace ts {
         function checkApplicableSignature(node: CallLikeExpression, args: Expression[], signature: Signature, relation: Map<RelationComparisonResult>, excludeArgument: boolean[], reportErrors: boolean) {
             const headMessage = Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1;
             if (signature.thisType) {
-                // TODO: node, of course, might not be of the form `obj.method` (should it default to void?)
-                // TODO: If signature.thisType is not defined, then strict mode says that it defaults to `void` or `this`.
+                // If the source is not of the form `x.f`, then sourceType = voidType
+                // If the target is voidType, then the check is skipped -- anything is compatible.
                 const sourceNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
-                const sourceType = sourceNode ? getTypeOfNode(sourceNode) : voidType;
-                if (!checkTypeRelatedTo(sourceType, getTypeOfSymbol(signature.thisType), relation, sourceNode, headMessage)) {
-                    return false;
+                const targetType = getTypeOfSymbol(signature.thisType);
+                if (targetType !== voidType) {
+                    if (!checkTypeRelatedTo(sourceNode ? getTypeOfNode(sourceNode) : voidType, targetType, relation, sourceNode, headMessage)) {
+                        return false;
+                    }
                 }
             }
             const argCount = getEffectiveArgumentCount(node, args, signature);
@@ -9955,19 +9957,15 @@ namespace ts {
             // TODO: Should a contextual type provide a default this-type (void/this) if it is not specified?
             // I think it should be explicitly added to the contextual type when the contextual type is created.
             // Somewhere else. 
-            if (context.thisType && !signature.thisType) {
+            if (context.thisType) {
                 const contextualThisType = getTypeOfSymbol(context.thisType);
-                if (signature.declaration.kind === SyntaxKind.ArrowFunction) {
-                    // thisType needs to be void, otherwise it's an error
-                    if (contextualThisType !== voidType) {
-                        // report an error, `this` must be `:void`
-                        // TODO:'this is implicitly of type any' is not precise -- should be 'this must be void for lambda'
-                        reportImplicitAnyError(signature.declaration, voidType);
-                    }
+                if (signature.declaration.kind !== SyntaxKind.ArrowFunction) {
+                    // do not contextually type thisType for ArrowFunction. 
+                    // (references to `this` in an arrow function refer to an outer object)
+                    // NOTE: Probably isn't safe to modify signature at this point.
+                    signature.thisType = cloneSymbol(context.thisType);
+                    assignTypeToParameterAndFixTypeParameters(signature.thisType, contextualThisType, mapper);
                 }
-                // NOTE: Probably isn't safe to modify signature at this point.
-                signature.thisType = cloneSymbol(context.thisType);
-                assignTypeToParameterAndFixTypeParameters(signature.thisType, contextualThisType, mapper);
             }
             const len = signature.parameters.length - (signature.hasRestParameter ? 1 : 0);
             for (let i = 0; i < len; i++) {
