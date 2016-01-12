@@ -3946,14 +3946,21 @@ namespace ts {
                 if (minArgumentCount < 0) {
                     minArgumentCount = declaration.parameters.length - (thisType ? 1 : 0);
                 }
-                if (!thisType && (declaration.kind === SyntaxKind.FunctionDeclaration || declaration.kind === SyntaxKind.CallSignature)) {
-                    // TODO: This part looks like the binding pattern code that manually creates symbols.
-                    // that doesn't mean it's right though. It's probably wrong.
-                    // Create a symbol whose type is void
-                    thisType = createSymbol(SymbolFlags.Variable, "this");
-                    thisType.valueDeclaration = declaration; // hm. WRONG.
-                    thisType.declarations = [thisType.valueDeclaration];
-                    getSymbolLinks(thisType).type = voidType;
+                if (!thisType) {
+                    if(declaration.kind === SyntaxKind.FunctionDeclaration || declaration.kind === SyntaxKind.CallSignature || declaration.kind === SyntaxKind.FunctionType) {
+                        // TODO: This part looks like the binding pattern code that manually creates symbols.
+                        // that doesn't mean it's right though. It's probably wrong.
+                        // Create a symbol whose type is void
+                        thisType = createSymbol(SymbolFlags.Variable, "this");
+                        thisType.valueDeclaration = declaration; // hm. WRONG.
+                        thisType.declarations = [thisType.valueDeclaration];
+                        getSymbolLinks(thisType).type = voidType;
+                    }
+                    else if (declaration.kind === SyntaxKind.MethodDeclaration || SyntaxKind.MethodSignature) {
+                        // somehow grab the this type (start with classes for now)
+                        // maybe use a method similar to checkThisExpression to walk up to the nearest this binder.
+                        thisType = undefined;
+                    }
                     // TODO: Don't know how to capture `this` for method declarations -- skipping for now since the old method behaviour is correct but incomplete
                     // (it looks it up whenever you reference 'this', which of course doesn't cover assignability)
                 }
@@ -5681,16 +5688,20 @@ namespace ts {
                 target = getErasedSignature(target);
                 let result = Ternary.True;
                 if (source.thisType || target.thisType) {
-                    // TODO: Don't default to any -- use `this` or `void` depending on whether it's a class-bound signature.
+                    // TODO: the anyType case should only happen for methods, and it should change to be `this`, at which point
+                    // it should be an error not to have a thisType.
                     const s: Type = target.thisType && !source.thisType ? anyType : getTypeOfSymbol(source.thisType);
                     const t: Type = source.thisType && !target.thisType ? anyType : getTypeOfSymbol(target.thisType);
-                    const saveErrorInfo = errorInfo;
-                    const related = isParameterRelatedTo(s, t, "this", "this");
-                    if (!related) {
-                        return Ternary.False;
+                    if (s !== voidType) {
+                        // void sources are assignable to anything. Should be fine.
+                        const saveErrorInfo = errorInfo;
+                        const related = isParameterRelatedTo(s, t, "this", "this");
+                        if (!related) {
+                            return Ternary.False;
+                        }
+                        errorInfo = saveErrorInfo;
+                        result &= related;
                     }
-                    errorInfo = saveErrorInfo;
-                    result &= related;
                 }
                 const [checkCount, sourceMax, targetMax] = getNumberOfParametersToCheck(source, target);
                 for (let i = 0; i < checkCount; i++) {
