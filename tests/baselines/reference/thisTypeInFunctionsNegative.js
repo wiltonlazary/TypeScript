@@ -50,7 +50,7 @@ let impl: I = {
     implicitMethod() {
         return this.a; // ok, I.a: number
     },
-    implicitFunction: () => 12
+    implicitFunction: function () { return this.a; } // TODO: error 'a' not found in 'void'
 }
 let implExplicitStructural = impl.explicitStructural;
 implExplicitStructural(); // error, no 'a' in 'void'
@@ -58,7 +58,7 @@ let implExplicitInterface = impl.explicitInterface;
 implExplicitInterface(); // error, no 'a' in 'void' 
 let implImplicitMethod = impl.implicitMethod;
 implImplicitMethod(); // error, no 'a' in 'void'
-function f(this: { y: number }, x: number): number {
+function explicitStructural(this: { y: number }, x: number): number {
     return x + this.y;
 }
 function propertyName(this: { y: number }, x: number): number {
@@ -71,9 +71,9 @@ function noThisSpecified(x: number): number {
     // this:void unless loose-this is on
     return x + this.notSpecified;
 }
-let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
-let wrongPropertyType: {y: string, f: (this: { y: number }, x: number) => number} = { y: 'foo', f };
-let wrongPropertyName: {wrongName: number, f: (this: { y: number }, x: number) => number} = { wrongName: 12, f };
+let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, explicitStructural };
+let wrongPropertyType: {y: string, f: (this: { y: number }, x: number) => number} = { y: 'foo', explicitStructural };
+let wrongPropertyName: {wrongName: number, f: (this: { y: number }, x: number) => number} = { wrongName: 12, explicitStructural };
 
 ok.f(); // not enough arguments
 ok.f('wrong type');
@@ -96,9 +96,7 @@ c.explicitProperty('wrong type 3');
 c.explicitProperty(15, 'too many arguments 3');
 
 // oops, this triggers contextual typing, which needs to be updated to understand that =>'s `this` is void.
-let voidToSpecified: (this: { y: number }, x: number) => number = x => x + this.y;
-let specifiedLambda: (this: void, x: number) => number = x => x + 12;
-let specifiedLambdaToSpecified: (this: {y: number}, x: number) => number = specifiedLambda;
+let specifiedToImplicitVoid: (x: number) => number = explicitStructural;
 
 let reconstructed: { 
     explicitProperty: (this: {n : number}, m: number) => number,
@@ -119,14 +117,6 @@ let reconstructed: {
 // lambdas have this: void for assignability purposes (and this unbound (free) for body checking)
 let d = new D();
 let explicitXProperty: (this: { x: number }, m: number) => number;
-c.explicitC = m => m;
-c.explicitThis = m => m;
-c.explicitProperty = m => m;
-
-// can't refer to this within lambdas
-c.explicitC = m => m + this.n;
-c.explicitThis = m => m + this.n;
-c.explicitProperty = m => m + this.n;
 
 // can't name parameters 'this' in a lambda.
 c.explicitProperty = (this, m) => m + this.n;
@@ -206,7 +196,7 @@ var impl = {
     implicitMethod: function () {
         return this.a; // ok, I.a: number
     },
-    implicitFunction: function () { return 12; }
+    implicitFunction: function () { return this.a; } // TODO: error 'a' not found in 'void'
 };
 var implExplicitStructural = impl.explicitStructural;
 implExplicitStructural(); // error, no 'a' in 'void'
@@ -214,7 +204,7 @@ var implExplicitInterface = impl.explicitInterface;
 implExplicitInterface(); // error, no 'a' in 'void' 
 var implImplicitMethod = impl.implicitMethod;
 implImplicitMethod(); // error, no 'a' in 'void'
-function f(this, x) {
+function explicitStructural(this, x) {
     return x + this.y;
 }
 function propertyName(this, x) {
@@ -227,9 +217,9 @@ function noThisSpecified(x) {
     // this:void unless loose-this is on
     return x + this.notSpecified;
 }
-var ok = { y: 12, f: f };
-var wrongPropertyType = { y: 'foo', f: f };
-var wrongPropertyName = { wrongName: 12, f: f };
+var ok = { y: 12, explicitStructural: explicitStructural };
+var wrongPropertyType = { y: 'foo', explicitStructural: explicitStructural };
+var wrongPropertyName = { wrongName: 12, explicitStructural: explicitStructural };
 ok.f(); // not enough arguments
 ok.f('wrong type');
 ok.f(13, 'too many arguments');
@@ -249,9 +239,7 @@ c.explicitProperty();
 c.explicitProperty('wrong type 3');
 c.explicitProperty(15, 'too many arguments 3');
 // oops, this triggers contextual typing, which needs to be updated to understand that =>'s `this` is void.
-var voidToSpecified = function (x) { return x + _this.y; };
-var specifiedLambda = function (x) { return x + 12; };
-var specifiedLambdaToSpecified = specifiedLambda;
+var specifiedToImplicitVoid = explicitStructural;
 var reconstructed = {
     explicitProperty: c.explicitProperty,
     explicitC: c.explicitC,
@@ -263,13 +251,6 @@ var reconstructed = {
 // lambdas have this: void for assignability purposes (and this unbound (free) for body checking)
 var d = new D();
 var explicitXProperty;
-c.explicitC = function (m) { return m; };
-c.explicitThis = function (m) { return m; };
-c.explicitProperty = function (m) { return m; };
-// can't refer to this within lambdas
-c.explicitC = function (m) { return m + _this.n; };
-c.explicitThis = function (m) { return m + _this.n; };
-c.explicitProperty = function (m) { return m + _this.n; };
 // can't name parameters 'this' in a lambda.
 c.explicitProperty = (this, m);
 m + this.n;

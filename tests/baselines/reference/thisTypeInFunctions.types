@@ -107,8 +107,8 @@ interface I {
     implicitFunction: () => number;
 >implicitFunction : () => number
 }
-function f(this: { y: number }, x: number): number {
->f : (x: number) => number
+function explicitStructural(this: { y: number }, x: number): number {
+>explicitStructural : (x: number) => number
 >this : { y: number; }
 >y : number
 >x : number
@@ -257,16 +257,6 @@ impl.implicitMethod = function () { return this.a; };
 >this : any
 >a : any
 
-impl.implicitFunction = function () { return this.a; }; // ok, this: any because it refers to some outer object (window?)
->impl.implicitFunction = function () { return this.a; } : () => any
->impl.implicitFunction : () => number
->impl : I
->implicitFunction : () => number
->function () { return this.a; } : () => any
->this.a : any
->this : any
->a : any
-
 impl.implicitMethod = () => 12;
 >impl.implicitMethod = () => 12 : () => number
 >impl.implicitMethod : () => number
@@ -275,26 +265,29 @@ impl.implicitMethod = () => 12;
 >() => 12 : () => number
 >12 : number
 
-impl.implicitFunction = () => 12;
->impl.implicitFunction = () => 12 : () => number
+impl.implicitFunction = () => this.a; // ok, this: any because it refers to some outer object (window?)
+>impl.implicitFunction = () => this.a : () => any
 >impl.implicitFunction : () => number
 >impl : I
 >implicitFunction : () => number
->() => 12 : () => number
->12 : number
+>() => this.a : () => any
+>this.a : any
+>this : any
+>a : any
 
 // parameter checking
-let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
+let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f: explicitStructural };
 >ok : { y: number; f: (x: number) => number; }
 >y : number
 >f : (x: number) => number
 >this : { y: number; }
 >y : number
 >x : number
->{ y: 12, f } : { y: number; f: (x: number) => number; }
+>{ y: 12, f: explicitStructural } : { y: number; f: (x: number) => number; }
 >y : number
 >12 : number
 >f : (x: number) => number
+>explicitStructural : (x: number) => number
 
 let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: implicitThis };
 >implicitAnyOk : { notSpecified: number; f: (x: number) => number; }
@@ -449,17 +442,25 @@ reconstructed.implicitThis(11);
 >11 : number
 
 // assignment checking
-let specifiedToAny: (x: number) => number = f;
->specifiedToAny : (x: number) => number
+let unboundToSpecified: (this: { y: number }, x: number) => number = x => x + this.y; // ok, this:any
+>unboundToSpecified : (x: number) => number
+>this : { y: number; }
+>y : number
 >x : number
->f : (x: number) => number
+>x => x + this.y : (x: number) => any
+>x : number
+>x + this.y : any
+>x : number
+>this.y : any
+>this : any
+>y : any
 
-let specifiedToSpecified: (this: {y: number}, x: number) => number = f;
+let specifiedToSpecified: (this: {y: number}, x: number) => number = explicitStructural;
 >specifiedToSpecified : (x: number) => number
 >this : { y: number; }
 >y : number
 >x : number
->f : (x: number) => number
+>explicitStructural : (x: number) => number
 
 let anyToSpecified: (this: { y: number }, x: number) => number = function(x: number): number { return x + 12; };
 >anyToSpecified : (x: number) => number
@@ -498,6 +499,12 @@ let unspecifiedLambdaToSpecified: (this: {y: number}, x: number) => number = uns
 >x : number
 >unspecifiedLambda : (x: number) => number
 
+let specifiedLambdaToSpecified: (this: {y: number}, x: number) => number = specifiedLambda;
+>specifiedLambdaToSpecified : (x: number) => number
+>this : { y: number; }
+>y : number
+>x : number
+>specifiedLambda : (x: number) => number
 
 
 let explicitCFunction: (this: C, m: number) => number;
@@ -564,6 +571,75 @@ c.explicitProperty = reconstructed.explicitProperty;
 >reconstructed.explicitProperty : (m: number) => number
 >reconstructed : { explicitProperty: (m: number) => number; implicitThis: (m: number) => number; n: number; }
 >explicitProperty : (m: number) => number
+
+// lambdas are assignable to anything
+c.explicitC = m => m;
+>c.explicitC = m => m : (m: number) => number
+>c.explicitC : (m: number) => number
+>c : C
+>explicitC : (m: number) => number
+>m => m : (m: number) => number
+>m : number
+>m : number
+
+c.explicitThis = m => m;
+>c.explicitThis = m => m : (m: number) => number
+>c.explicitThis : (m: number) => number
+>c : C
+>explicitThis : (m: number) => number
+>m => m : (m: number) => number
+>m : number
+>m : number
+
+c.explicitProperty = m => m;
+>c.explicitProperty = m => m : (m: number) => number
+>c.explicitProperty : (m: number) => number
+>c : C
+>explicitProperty : (m: number) => number
+>m => m : (m: number) => number
+>m : number
+>m : number
+
+// this inside lambdas refer to outer scope
+// the outer-scoped lambda at top-level is still just `any`
+c.explicitC = m => m + this.n;
+>c.explicitC = m => m + this.n : (m: number) => any
+>c.explicitC : (m: number) => number
+>c : C
+>explicitC : (m: number) => number
+>m => m + this.n : (m: number) => any
+>m : number
+>m + this.n : any
+>m : number
+>this.n : any
+>this : any
+>n : any
+
+c.explicitThis = m => m + this.n;
+>c.explicitThis = m => m + this.n : (m: number) => any
+>c.explicitThis : (m: number) => number
+>c : C
+>explicitThis : (m: number) => number
+>m => m + this.n : (m: number) => any
+>m : number
+>m + this.n : any
+>m : number
+>this.n : any
+>this : any
+>n : any
+
+c.explicitProperty = m => m + this.n;
+>c.explicitProperty = m => m + this.n : (m: number) => any
+>c.explicitProperty : (m: number) => number
+>c : C
+>explicitProperty : (m: number) => number
+>m => m + this.n : (m: number) => any
+>m : number
+>m + this.n : any
+>m : number
+>this.n : any
+>this : any
+>n : any
 
 //NOTE: this=C here, I guess?
 c.explicitThis = explicitCFunction;

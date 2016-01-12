@@ -1,8 +1,15 @@
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(16,15): error TS2339: Property 'n' does not exist on type 'void'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(44,21): error TS2339: Property 'a' does not exist on type 'void'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(52,49): error TS2339: Property 'a' does not exist on type 'void'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(64,21): error TS2339: Property 'notFound' does not exist on type '{ y: number; }'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(67,21): error TS2339: Property 'notSpecified' does not exist on type 'void'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(71,21): error TS2339: Property 'notSpecified' does not exist on type 'void'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(73,79): error TS2322: Type '{ y: number; explicitStructural: (x: number) => number; }' is not assignable to type '{ y: number; f: (x: number) => number; }'.
+  Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ y: number; f: (x: number) => number; }'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(74,97): error TS2322: Type '{ y: string; explicitStructural: (x: number) => number; }' is not assignable to type '{ y: string; f: (x: number) => number; }'.
+  Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ y: string; f: (x: number) => number; }'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(75,110): error TS2322: Type '{ wrongName: number; explicitStructural: (x: number) => number; }' is not assignable to type '{ wrongName: number; f: (x: number) => number; }'.
+  Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ wrongName: number; f: (x: number) => number; }'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(78,6): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(79,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(80,1): error TS2345: Argument of type '{ y: string; f: (x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
@@ -21,66 +28,66 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(91,16): er
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(92,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(94,20): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(95,1): error TS2346: Supplied parameters do not match any signature of call target.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(100,5): error TS2322: Type '(x: number) => number' is not assignable to type '(x: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(98,5): error TS2322: Type '(x: number) => number' is not assignable to type '(x: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
-    Type 'void' is not assignable to type '{ y: number; }'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(105,26): error TS2526: A 'this' type is available only in a non-static member of a class or interface.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(131,29): error TS2304: Cannot find name 'm'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(131,32): error TS1005: ';' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(131,35): error TS2304: Cannot find name 'm'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(134,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+    Type '{ y: number; }' is not assignable to type 'void'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(103,26): error TS2526: A 'this' type is available only in a non-static member of a class or interface.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(121,29): error TS2304: Cannot find name 'm'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(121,32): error TS1005: ';' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(121,35): error TS2304: Cannot find name 'm'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(124,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'D' is not assignable to type 'C'.
       Property 'n' is missing in type 'D'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(135,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(125,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type '{ x: number; }' is not assignable to type '{ n: number; }'.
       Property 'n' is missing in type '{ x: number; }'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(138,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(128,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'D' is not assignable to type 'C'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(139,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(129,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'D' is not assignable to type 'C'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(141,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(131,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'D' is not assignable to type 'C'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(142,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(132,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'D' is not assignable to type 'C'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(143,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(133,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'D' is not assignable to type '{ n: number; }'.
       Property 'n' is missing in type 'D'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(145,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(147,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(135,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(137,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'D' is not assignable to type 'void'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(148,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(138,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'D' is not assignable to type 'void'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(152,38): error TS2332: 'this' cannot be referenced in current location.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(153,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(153,34): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(153,38): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(154,28): error TS2370: A rest parameter must be of an array type.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(154,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(154,31): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(154,35): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(155,31): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(155,32): error TS1138: Parameter declaration expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(156,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(156,36): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(156,40): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,30): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,32): error TS1138: Parameter declaration expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,39): error TS1005: ';' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,40): error TS1128: Declaration or statement expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,42): error TS2304: Cannot find name 'number'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,49): error TS1005: ';' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(142,38): error TS2332: 'this' cannot be referenced in current location.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(143,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(143,34): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(143,38): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(144,28): error TS2370: A rest parameter must be of an array type.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(144,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(144,31): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(144,35): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(145,31): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(145,32): error TS1138: Parameter declaration expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(146,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(146,36): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(146,40): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(147,30): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(147,32): error TS1138: Parameter declaration expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(147,39): error TS1005: ';' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(147,40): error TS1128: Declaration or statement expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(147,42): error TS2304: Cannot find name 'number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(147,49): error TS1005: ';' expected.
 
 
-==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (54 errors) ====
+==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (58 errors) ====
     class C {
         n: number;
         explicitThis(this: this, m: number): number {
@@ -136,7 +143,9 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,49): e
         implicitMethod() {
             return this.a; // ok, I.a: number
         },
-        implicitFunction: () => 12
+        implicitFunction: function () { return this.a; } // TODO: error 'a' not found in 'void'
+                                                    ~
+!!! error TS2339: Property 'a' does not exist on type 'void'.
     }
     let implExplicitStructural = impl.explicitStructural;
     implExplicitStructural(); // error, no 'a' in 'void'
@@ -144,7 +153,7 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,49): e
     implExplicitInterface(); // error, no 'a' in 'void' 
     let implImplicitMethod = impl.implicitMethod;
     implImplicitMethod(); // error, no 'a' in 'void'
-    function f(this: { y: number }, x: number): number {
+    function explicitStructural(this: { y: number }, x: number): number {
         return x + this.y;
     }
     function propertyName(this: { y: number }, x: number): number {
@@ -163,9 +172,18 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,49): e
                         ~~~~~~~~~~~~
 !!! error TS2339: Property 'notSpecified' does not exist on type 'void'.
     }
-    let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
-    let wrongPropertyType: {y: string, f: (this: { y: number }, x: number) => number} = { y: 'foo', f };
-    let wrongPropertyName: {wrongName: number, f: (this: { y: number }, x: number) => number} = { wrongName: 12, f };
+    let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, explicitStructural };
+                                                                                  ~~~~~~~~~~~~~~~~~~
+!!! error TS2322: Type '{ y: number; explicitStructural: (x: number) => number; }' is not assignable to type '{ y: number; f: (x: number) => number; }'.
+!!! error TS2322:   Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ y: number; f: (x: number) => number; }'.
+    let wrongPropertyType: {y: string, f: (this: { y: number }, x: number) => number} = { y: 'foo', explicitStructural };
+                                                                                                    ~~~~~~~~~~~~~~~~~~
+!!! error TS2322: Type '{ y: string; explicitStructural: (x: number) => number; }' is not assignable to type '{ y: string; f: (x: number) => number; }'.
+!!! error TS2322:   Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ y: string; f: (x: number) => number; }'.
+    let wrongPropertyName: {wrongName: number, f: (this: { y: number }, x: number) => number} = { wrongName: 12, explicitStructural };
+                                                                                                                 ~~~~~~~~~~~~~~~~~~
+!!! error TS2322: Type '{ wrongName: number; explicitStructural: (x: number) => number; }' is not assignable to type '{ wrongName: number; f: (x: number) => number; }'.
+!!! error TS2322:   Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ wrongName: number; f: (x: number) => number; }'.
     
     ok.f(); // not enough arguments
     ok.f('wrong type');
@@ -221,13 +239,11 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,49): e
 !!! error TS2346: Supplied parameters do not match any signature of call target.
     
     // oops, this triggers contextual typing, which needs to be updated to understand that =>'s `this` is void.
-    let voidToSpecified: (this: { y: number }, x: number) => number = x => x + this.y;
-    let specifiedLambda: (this: void, x: number) => number = x => x + 12;
-    let specifiedLambdaToSpecified: (this: {y: number}, x: number) => number = specifiedLambda;
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    let specifiedToImplicitVoid: (x: number) => number = explicitStructural;
+        ~~~~~~~~~~~~~~~~~~~~~~~
 !!! error TS2322: Type '(x: number) => number' is not assignable to type '(x: number) => number'.
 !!! error TS2322:   Types of parameters 'this' and 'this' are incompatible.
-!!! error TS2322:     Type 'void' is not assignable to type '{ y: number; }'.
+!!! error TS2322:     Type '{ y: number; }' is not assignable to type 'void'.
     
     let reconstructed: { 
         explicitProperty: (this: {n : number}, m: number) => number,
@@ -250,14 +266,6 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(157,49): e
     // lambdas have this: void for assignability purposes (and this unbound (free) for body checking)
     let d = new D();
     let explicitXProperty: (this: { x: number }, m: number) => number;
-    c.explicitC = m => m;
-    c.explicitThis = m => m;
-    c.explicitProperty = m => m;
-    
-    // can't refer to this within lambdas
-    c.explicitC = m => m + this.n;
-    c.explicitThis = m => m + this.n;
-    c.explicitProperty = m => m + this.n;
     
     // can't name parameters 'this' in a lambda.
     c.explicitProperty = (this, m) => m + this.n;

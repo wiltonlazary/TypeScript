@@ -101,17 +101,17 @@ interface I {
     implicitFunction: () => number;
 >implicitFunction : Symbol(implicitFunction, Decl(thisTypeInFunctions.ts, 30, 29))
 }
-function f(this: { y: number }, x: number): number {
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 32, 1))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 33, 11))
->y : Symbol(y, Decl(thisTypeInFunctions.ts, 33, 18))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 33, 31))
+function explicitStructural(this: { y: number }, x: number): number {
+>explicitStructural : Symbol(explicitStructural, Decl(thisTypeInFunctions.ts, 32, 1))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 33, 28))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 33, 35))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 33, 48))
 
     return x + this.y;
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 33, 31))
->this.y : Symbol(y, Decl(thisTypeInFunctions.ts, 33, 18))
->this : Symbol(, Decl(thisTypeInFunctions.ts, 33, 16))
->y : Symbol(y, Decl(thisTypeInFunctions.ts, 33, 18))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 33, 48))
+>this.y : Symbol(y, Decl(thisTypeInFunctions.ts, 33, 35))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 33, 33))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 33, 35))
 }
 function justThis(this: { y: number }): number {
 >justThis : Symbol(justThis, Decl(thisTypeInFunctions.ts, 35, 1))
@@ -213,323 +213,373 @@ impl.implicitMethod = function () { return this.a; };
 >impl : Symbol(impl, Decl(thisTypeInFunctions.ts, 42, 3))
 >implicitMethod : Symbol(I.implicitMethod, Decl(thisTypeInFunctions.ts, 28, 39))
 
-impl.implicitFunction = function () { return this.a; }; // ok, this: any because it refers to some outer object (window?)
->impl.implicitFunction : Symbol(I.implicitFunction, Decl(thisTypeInFunctions.ts, 30, 29))
->impl : Symbol(impl, Decl(thisTypeInFunctions.ts, 42, 3))
->implicitFunction : Symbol(I.implicitFunction, Decl(thisTypeInFunctions.ts, 30, 29))
-
 impl.implicitMethod = () => 12;
 >impl.implicitMethod : Symbol(I.implicitMethod, Decl(thisTypeInFunctions.ts, 28, 39))
 >impl : Symbol(impl, Decl(thisTypeInFunctions.ts, 42, 3))
 >implicitMethod : Symbol(I.implicitMethod, Decl(thisTypeInFunctions.ts, 28, 39))
 
-impl.implicitFunction = () => 12;
+impl.implicitFunction = () => this.a; // ok, this: any because it refers to some outer object (window?)
 >impl.implicitFunction : Symbol(I.implicitFunction, Decl(thisTypeInFunctions.ts, 30, 29))
 >impl : Symbol(impl, Decl(thisTypeInFunctions.ts, 42, 3))
 >implicitFunction : Symbol(I.implicitFunction, Decl(thisTypeInFunctions.ts, 30, 29))
 
 // parameter checking
-let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f };
->ok : Symbol(ok, Decl(thisTypeInFunctions.ts, 72, 3))
->y : Symbol(y, Decl(thisTypeInFunctions.ts, 72, 9))
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 72, 19))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 72, 24))
->y : Symbol(y, Decl(thisTypeInFunctions.ts, 72, 31))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 72, 44))
->y : Symbol(y, Decl(thisTypeInFunctions.ts, 72, 70))
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 72, 77))
+let ok: {y: number, f: (this: { y: number }, x: number) => number} = { y: 12, f: explicitStructural };
+>ok : Symbol(ok, Decl(thisTypeInFunctions.ts, 71, 3))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 71, 9))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 71, 19))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 71, 24))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 71, 31))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 71, 44))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 71, 70))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 71, 77))
+>explicitStructural : Symbol(explicitStructural, Decl(thisTypeInFunctions.ts, 32, 1))
 
 let implicitAnyOk: {notSpecified: number, f: (x: number) => number} = { notSpecified: 12, f: implicitThis };
->implicitAnyOk : Symbol(implicitAnyOk, Decl(thisTypeInFunctions.ts, 73, 3))
->notSpecified : Symbol(notSpecified, Decl(thisTypeInFunctions.ts, 73, 20))
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 73, 41))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 73, 46))
->notSpecified : Symbol(notSpecified, Decl(thisTypeInFunctions.ts, 73, 71))
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 73, 89))
+>implicitAnyOk : Symbol(implicitAnyOk, Decl(thisTypeInFunctions.ts, 72, 3))
+>notSpecified : Symbol(notSpecified, Decl(thisTypeInFunctions.ts, 72, 20))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 72, 41))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 72, 46))
+>notSpecified : Symbol(notSpecified, Decl(thisTypeInFunctions.ts, 72, 71))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 72, 89))
 >implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 38, 1))
 
 ok.f(13);
->ok.f : Symbol(f, Decl(thisTypeInFunctions.ts, 72, 19))
->ok : Symbol(ok, Decl(thisTypeInFunctions.ts, 72, 3))
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 72, 19))
+>ok.f : Symbol(f, Decl(thisTypeInFunctions.ts, 71, 19))
+>ok : Symbol(ok, Decl(thisTypeInFunctions.ts, 71, 3))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 71, 19))
 
 implicitThis(12);
 >implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 38, 1))
 
 implicitAnyOk.f(12);
->implicitAnyOk.f : Symbol(f, Decl(thisTypeInFunctions.ts, 73, 41))
->implicitAnyOk : Symbol(implicitAnyOk, Decl(thisTypeInFunctions.ts, 73, 3))
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 73, 41))
+>implicitAnyOk.f : Symbol(f, Decl(thisTypeInFunctions.ts, 72, 41))
+>implicitAnyOk : Symbol(implicitAnyOk, Decl(thisTypeInFunctions.ts, 72, 3))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 72, 41))
 
 let c = new C();
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >C : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 
 let d = new D();
->d : Symbol(d, Decl(thisTypeInFunctions.ts, 79, 3))
+>d : Symbol(d, Decl(thisTypeInFunctions.ts, 78, 3))
 >D : Symbol(D, Decl(thisTypeInFunctions.ts, 18, 1))
 
 let ripped = c.explicitC;
->ripped : Symbol(ripped, Decl(thisTypeInFunctions.ts, 80, 3))
+>ripped : Symbol(ripped, Decl(thisTypeInFunctions.ts, 79, 3))
 >c.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
 
 c.explicitC(12);
 >c.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
 
 c.explicitProperty(12);
 >c.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
 
 c.explicitThis(12);
 >c.explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
 
 c.implicitThis(12);
 >c.implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
 
 d.explicitC(12);
 >d.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->d : Symbol(d, Decl(thisTypeInFunctions.ts, 79, 3))
+>d : Symbol(d, Decl(thisTypeInFunctions.ts, 78, 3))
 >explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
 
 d.explicitProperty(12);
 >d.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->d : Symbol(d, Decl(thisTypeInFunctions.ts, 79, 3))
+>d : Symbol(d, Decl(thisTypeInFunctions.ts, 78, 3))
 >explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
 
 d.explicitThis(12);
 >d.explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
->d : Symbol(d, Decl(thisTypeInFunctions.ts, 79, 3))
+>d : Symbol(d, Decl(thisTypeInFunctions.ts, 78, 3))
 >explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
 
 d.implicitThis(12);
 >d.implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
->d : Symbol(d, Decl(thisTypeInFunctions.ts, 79, 3))
+>d : Symbol(d, Decl(thisTypeInFunctions.ts, 78, 3))
 >implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
 
 let reconstructed: { 
->reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 89, 3))
+>reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 88, 3))
 
     explicitProperty: (this: {n : number}, m: number) => number,
->explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 89, 20))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 90, 23))
->n : Symbol(n, Decl(thisTypeInFunctions.ts, 90, 30))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 90, 42))
+>explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 88, 20))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 89, 23))
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 89, 30))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 89, 42))
 
     implicitThis: (m: number) => number,
->implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 90, 64))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 91, 19))
+>implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 89, 64))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 90, 19))
 
     n: number,
->n : Symbol(n, Decl(thisTypeInFunctions.ts, 91, 40))
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 90, 40))
 
 } = { 
     explicitProperty: c.explicitProperty, 
->explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 93, 5))
+>explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 92, 5))
 >c.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
 
     implicitThis: c.implicitThis,
->implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 94, 41))
+>implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 93, 41))
 >c.implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
 
     n: 12 
->n : Symbol(n, Decl(thisTypeInFunctions.ts, 95, 33))
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 94, 33))
 
 };
 reconstructed.explicitProperty(11);
->reconstructed.explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 89, 20))
->reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 89, 3))
->explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 89, 20))
+>reconstructed.explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 88, 20))
+>reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 88, 3))
+>explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 88, 20))
 
 reconstructed.implicitThis(11);
->reconstructed.implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 90, 64))
->reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 89, 3))
->implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 90, 64))
+>reconstructed.implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 89, 64))
+>reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 88, 3))
+>implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 89, 64))
 
 // assignment checking
-let specifiedToAny: (x: number) => number = f;
->specifiedToAny : Symbol(specifiedToAny, Decl(thisTypeInFunctions.ts, 102, 3))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 102, 21))
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 32, 1))
+let unboundToSpecified: (this: { y: number }, x: number) => number = x => x + this.y; // ok, this:any
+>unboundToSpecified : Symbol(unboundToSpecified, Decl(thisTypeInFunctions.ts, 101, 3))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 101, 25))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 101, 32))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 101, 45))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 101, 68))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 101, 68))
 
-let specifiedToSpecified: (this: {y: number}, x: number) => number = f;
->specifiedToSpecified : Symbol(specifiedToSpecified, Decl(thisTypeInFunctions.ts, 103, 3))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 103, 27))
->y : Symbol(y, Decl(thisTypeInFunctions.ts, 103, 34))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 103, 45))
->f : Symbol(f, Decl(thisTypeInFunctions.ts, 32, 1))
+let specifiedToSpecified: (this: {y: number}, x: number) => number = explicitStructural;
+>specifiedToSpecified : Symbol(specifiedToSpecified, Decl(thisTypeInFunctions.ts, 102, 3))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 102, 27))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 102, 34))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 102, 45))
+>explicitStructural : Symbol(explicitStructural, Decl(thisTypeInFunctions.ts, 32, 1))
 
 let anyToSpecified: (this: { y: number }, x: number) => number = function(x: number): number { return x + 12; };
->anyToSpecified : Symbol(anyToSpecified, Decl(thisTypeInFunctions.ts, 104, 3))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 104, 21))
->y : Symbol(y, Decl(thisTypeInFunctions.ts, 104, 28))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 104, 41))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 104, 74))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 104, 74))
+>anyToSpecified : Symbol(anyToSpecified, Decl(thisTypeInFunctions.ts, 103, 3))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 103, 21))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 103, 28))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 103, 41))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 103, 74))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 103, 74))
 
 let unspecifiedLambda: (x: number) => number = x => x + 12;
->unspecifiedLambda : Symbol(unspecifiedLambda, Decl(thisTypeInFunctions.ts, 106, 3))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 106, 24))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 106, 46))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 106, 46))
+>unspecifiedLambda : Symbol(unspecifiedLambda, Decl(thisTypeInFunctions.ts, 105, 3))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 105, 24))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 105, 46))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 105, 46))
 
 let specifiedLambda: (this: void, x: number) => number = x => x + 12;
->specifiedLambda : Symbol(specifiedLambda, Decl(thisTypeInFunctions.ts, 107, 3))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 107, 22))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 107, 33))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 107, 56))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 107, 56))
+>specifiedLambda : Symbol(specifiedLambda, Decl(thisTypeInFunctions.ts, 106, 3))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 106, 22))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 106, 33))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 106, 56))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 106, 56))
 
 let unspecifiedLambdaToSpecified: (this: {y: number}, x: number) => number = unspecifiedLambda;
->unspecifiedLambdaToSpecified : Symbol(unspecifiedLambdaToSpecified, Decl(thisTypeInFunctions.ts, 108, 3))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 108, 35))
->y : Symbol(y, Decl(thisTypeInFunctions.ts, 108, 42))
->x : Symbol(x, Decl(thisTypeInFunctions.ts, 108, 53))
->unspecifiedLambda : Symbol(unspecifiedLambda, Decl(thisTypeInFunctions.ts, 106, 3))
+>unspecifiedLambdaToSpecified : Symbol(unspecifiedLambdaToSpecified, Decl(thisTypeInFunctions.ts, 107, 3))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 107, 35))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 107, 42))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 107, 53))
+>unspecifiedLambda : Symbol(unspecifiedLambda, Decl(thisTypeInFunctions.ts, 105, 3))
 
+let specifiedLambdaToSpecified: (this: {y: number}, x: number) => number = specifiedLambda;
+>specifiedLambdaToSpecified : Symbol(specifiedLambdaToSpecified, Decl(thisTypeInFunctions.ts, 108, 3))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 108, 33))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 108, 40))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 108, 51))
+>specifiedLambda : Symbol(specifiedLambda, Decl(thisTypeInFunctions.ts, 106, 3))
 
 
 let explicitCFunction: (this: C, m: number) => number;
->explicitCFunction : Symbol(explicitCFunction, Decl(thisTypeInFunctions.ts, 112, 3))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 112, 24))
+>explicitCFunction : Symbol(explicitCFunction, Decl(thisTypeInFunctions.ts, 111, 3))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 111, 24))
 >C : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 112, 32))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 111, 32))
 
 let explicitPropertyFunction: (this: {n: number}, m: number) => number;
->explicitPropertyFunction : Symbol(explicitPropertyFunction, Decl(thisTypeInFunctions.ts, 113, 3))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 113, 31))
->n : Symbol(n, Decl(thisTypeInFunctions.ts, 113, 38))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 113, 49))
+>explicitPropertyFunction : Symbol(explicitPropertyFunction, Decl(thisTypeInFunctions.ts, 112, 3))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 112, 31))
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 112, 38))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 112, 49))
 
 c.explicitC = explicitCFunction;
 >c.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->explicitCFunction : Symbol(explicitCFunction, Decl(thisTypeInFunctions.ts, 112, 3))
+>explicitCFunction : Symbol(explicitCFunction, Decl(thisTypeInFunctions.ts, 111, 3))
 
 c.explicitC = function(this: C, m: number) { return this.n + m };
 >c.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 115, 23))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 114, 23))
 >C : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 115, 31))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 114, 31))
 >this.n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
 >this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 115, 31))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 114, 31))
 
 c.explicitProperty = explicitPropertyFunction;
 >c.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->explicitPropertyFunction : Symbol(explicitPropertyFunction, Decl(thisTypeInFunctions.ts, 113, 3))
+>explicitPropertyFunction : Symbol(explicitPropertyFunction, Decl(thisTypeInFunctions.ts, 112, 3))
 
 c.explicitProperty = function(this: {n: number}, m: number) { return this.n + m };
 >c.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 117, 30))
->n : Symbol(n, Decl(thisTypeInFunctions.ts, 117, 37))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 117, 48))
->this.n : Symbol(n, Decl(thisTypeInFunctions.ts, 117, 37))
->this : Symbol(, Decl(thisTypeInFunctions.ts, 117, 35))
->n : Symbol(n, Decl(thisTypeInFunctions.ts, 117, 37))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 117, 48))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 116, 30))
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 116, 37))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 116, 48))
+>this.n : Symbol(n, Decl(thisTypeInFunctions.ts, 116, 37))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 116, 35))
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 116, 37))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 116, 48))
 
 c.explicitProperty = reconstructed.explicitProperty;
 >c.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->reconstructed.explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 89, 20))
->reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 89, 3))
->explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 89, 20))
+>reconstructed.explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 88, 20))
+>reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 88, 3))
+>explicitProperty : Symbol(explicitProperty, Decl(thisTypeInFunctions.ts, 88, 20))
+
+// lambdas are assignable to anything
+c.explicitC = m => m;
+>c.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
+>explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 120, 13))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 120, 13))
+
+c.explicitThis = m => m;
+>c.explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
+>explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 121, 16))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 121, 16))
+
+c.explicitProperty = m => m;
+>c.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
+>explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 122, 20))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 122, 20))
+
+// this inside lambdas refer to outer scope
+// the outer-scoped lambda at top-level is still just `any`
+c.explicitC = m => m + this.n;
+>c.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
+>explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 126, 13))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 126, 13))
+
+c.explicitThis = m => m + this.n;
+>c.explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
+>explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 127, 16))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 127, 16))
+
+c.explicitProperty = m => m + this.n;
+>c.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
+>explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 128, 20))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 128, 20))
 
 //NOTE: this=C here, I guess?
 c.explicitThis = explicitCFunction;
 >c.explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
->explicitCFunction : Symbol(explicitCFunction, Decl(thisTypeInFunctions.ts, 112, 3))
+>explicitCFunction : Symbol(explicitCFunction, Decl(thisTypeInFunctions.ts, 111, 3))
 
 c.explicitThis = function(this: C, m: number) { return this.n + m };
 >c.explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 122, 26))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 132, 26))
 >C : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 122, 34))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 132, 34))
 >this.n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
 >this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 122, 34))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 132, 34))
 
 // this:any compatibility
 c.explicitC = function(m: number) { return this.n + m };
 >c.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 125, 23))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 125, 23))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 135, 23))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 135, 23))
 
 c.explicitProperty = function(m: number) { return this.n + m };
 >c.explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 126, 30))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 126, 30))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 136, 30))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 136, 30))
 
 c.explicitThis = function(m: number) { return this.n + m };
 >c.explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 127, 26))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 127, 26))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 137, 26))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 137, 26))
 
 c.implicitThis = function(m: number) { return this.n + m };
 >c.implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 128, 26))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 128, 26))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 138, 26))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 138, 26))
 
 c.implicitThis = reconstructed.implicitThis;
 >c.implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
->reconstructed.implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 90, 64))
->reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 89, 3))
->implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 90, 64))
+>reconstructed.implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 89, 64))
+>reconstructed : Symbol(reconstructed, Decl(thisTypeInFunctions.ts, 88, 3))
+>implicitThis : Symbol(implicitThis, Decl(thisTypeInFunctions.ts, 89, 64))
 
 c.explicitC = function(this: B, m: number) { return this.n + m };
 >c.explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
->this : Symbol(this, Decl(thisTypeInFunctions.ts, 131, 23))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 141, 23))
 >B : Symbol(B, Decl(thisTypeInFunctions.ts, 19, 21))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 131, 31))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 141, 31))
 >this.n : Symbol(B.n, Decl(thisTypeInFunctions.ts, 20, 9))
 >this : Symbol(B, Decl(thisTypeInFunctions.ts, 19, 21))
 >n : Symbol(B.n, Decl(thisTypeInFunctions.ts, 20, 9))
->m : Symbol(m, Decl(thisTypeInFunctions.ts, 131, 31))
+>m : Symbol(m, Decl(thisTypeInFunctions.ts, 141, 31))
 
 // this:void compatibility
 c.explicitVoid = n => n;
 >c.explicitVoid : Symbol(C.explicitVoid, Decl(thisTypeInFunctions.ts, 14, 5))
->c : Symbol(c, Decl(thisTypeInFunctions.ts, 78, 3))
+>c : Symbol(c, Decl(thisTypeInFunctions.ts, 77, 3))
 >explicitVoid : Symbol(C.explicitVoid, Decl(thisTypeInFunctions.ts, 14, 5))
->n : Symbol(n, Decl(thisTypeInFunctions.ts, 134, 16))
->n : Symbol(n, Decl(thisTypeInFunctions.ts, 134, 16))
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 144, 16))
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 144, 16))
 
