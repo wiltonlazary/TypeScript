@@ -3920,7 +3920,8 @@ namespace ts {
                         paramSymbol = resolvedSymbol;
                     }
                     if (paramSymbol.name === "this") {
-                        thisType = paramSymbol;
+                        // TODO: paramSymbol is probably wrong, but so is param.type.symbol. I need more info to find out why.
+                        thisType = paramSymbol; // getTypeFromTypeNode(param.type).symbol || paramSymbol;
                         if (i !== 0) {
                             error(param, Diagnostics.this_cannot_be_referenced_in_current_location);
                         }
@@ -3947,7 +3948,7 @@ namespace ts {
                     minArgumentCount = declaration.parameters.length - (thisType ? 1 : 0);
                 }
                 if (!thisType) {
-                    if(declaration.kind === SyntaxKind.FunctionDeclaration || declaration.kind === SyntaxKind.CallSignature || declaration.kind === SyntaxKind.FunctionType) {
+                    if (declaration.kind === SyntaxKind.FunctionDeclaration || declaration.kind === SyntaxKind.CallSignature || declaration.kind === SyntaxKind.FunctionType) {
                         // TODO: This part looks like the binding pattern code that manually creates symbols.
                         // that doesn't mean it's right though. It's probably wrong.
                         // Create a symbol whose type is void
@@ -3956,13 +3957,14 @@ namespace ts {
                         thisType.declarations = [thisType.valueDeclaration];
                         getSymbolLinks(thisType).type = voidType;
                     }
-                    else if (declaration.kind === SyntaxKind.MethodDeclaration || SyntaxKind.MethodSignature) {
+                    else if ((declaration.kind === SyntaxKind.MethodDeclaration || declaration.kind === SyntaxKind.MethodSignature) && 
+                        isClassLike(declaration.parent)
+                        && (declaration.symbol.name === 'explicit' || declaration.symbol.name === 'implicit')
+                        ) {
                         // somehow grab the this type (start with classes for now)
-                        // maybe use a method similar to checkThisExpression to walk up to the nearest this binder.
-                        thisType = undefined;
+                        // pretty sure this is just the containing class, not the actual `this` ... but for assignability this may be correct.
+                        thisType = getSymbolOfNode(declaration.parent);
                     }
-                    // TODO: Don't know how to capture `this` for method declarations -- skipping for now since the old method behaviour is correct but incomplete
-                    // (it looks it up whenever you reference 'this', which of course doesn't cover assignability)
                 }
 
                 let returnType: Type;
@@ -5690,8 +5692,14 @@ namespace ts {
                 if (source.thisType || target.thisType) {
                     // TODO: the anyType case should only happen for methods, and it should change to be `this`, at which point
                     // it should be an error not to have a thisType.
-                    const s: Type = target.thisType && !source.thisType ? anyType : getTypeOfSymbol(source.thisType);
-                    const t: Type = source.thisType && !target.thisType ? anyType : getTypeOfSymbol(target.thisType);
+                    let s: Type = target.thisType && !source.thisType ? anyType : source.thisType.flags & SymbolFlags.Instantiated ? getTypeOfSymbol(source.thisType) : (<InterfaceType>getDeclaredTypeOfSymbol(source.thisType)).thisType;
+                    if (s === undefined) {
+                        s = getDeclaredTypeOfSymbol(source.thisType);
+                    }
+                    let t: Type = source.thisType && !target.thisType ? anyType : target.thisType.flags & SymbolFlags.Instantiated ? getTypeOfSymbol(target.thisType) : (<InterfaceType>getDeclaredTypeOfSymbol(target.thisType)).thisType;
+                    if (t === undefined) {
+                        t = getDeclaredTypeOfSymbol(target.thisType);
+                    }
                     if (s !== voidType) {
                         // void sources are assignable to anything. Should be fine.
                         const saveErrorInfo = errorInfo;
@@ -7113,7 +7121,13 @@ namespace ts {
             if (isFunctionLike(container)) {
                 const signature = getSignatureFromDeclaration(container);
                 if (signature.thisType) {
-                    return getTypeOfSymbol(signature.thisType);
+                    if (container.flags & NodeFlags.Static) {
+                        return getTypeOfSymbol(signature.thisType);
+                    }
+                    let thisType = (<InterfaceType>getDeclaredTypeOfSymbol(signature.thisType)).thisType;
+                    if (thisType) {
+                        return thisType;
+                    }
                 }
             }
             if (isClassLike(container.parent)) {
@@ -9083,9 +9097,16 @@ namespace ts {
                 // If the source is not of the form `x.f`, then sourceType = voidType
                 // If the target is voidType, then the check is skipped -- anything is compatible.
                 const sourceNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
-                const targetType = getTypeOfSymbol(signature.thisType);
-                if (targetType !== voidType) {
-                    if (!checkTypeRelatedTo(sourceNode ? getTypeOfNode(sourceNode) : voidType, targetType, relation, sourceNode, headMessage)) {
+                const targetType = signature.thisType.flags & SymbolFlags.Instantiated ? getTypeOfSymbol(signature.thisType) : getDeclaredTypeOfSymbol(signature.thisType);
+                if (targetType && targetType !== voidType) {
+                    let sourceType: Type;
+                    if (sourceNode) {
+                        sourceType = getTypeOfNode(sourceNode);
+                    }
+                    else {
+                        sourceType = voidType;
+                    }
+                    if (!checkTypeRelatedTo(sourceType, targetType, relation, sourceNode, headMessage)) {
                         return false;
                     }
                 }

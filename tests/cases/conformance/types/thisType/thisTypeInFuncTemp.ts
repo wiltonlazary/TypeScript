@@ -1,13 +1,27 @@
 class C {
     x: number
-    implicit(): number { return this.x; }
+    public implicit(): number { return this.x; }
     explicit(this: C): number { return this.x; }
+}
+let c = new C();
+let s = c.implicit();
+let n = c.explicit();
+class F extends C {
+    y: number
 }
 class D {
     y: number
-    m(): number { return this.y; }
+    implicit(): number { return this.y; }
 }
-let c = new C();
+class E extends D {
+    x: number
+}
 let d = new D();
-c.implicit = d.m
-c.explicit = d.m
+let e = new E();
+let f = new F();
+f.implicit = d.implicit // ok, 'y' in { x: number, y: number }
+c.explicit = d.implicit // error, 'y' not in { x: number }
+c.implicit = d.implicit // error, 'y' not in { x: number }
+c.implicit = e.implicit // error, 'y' not in { x: number }
+c.explicit = e.implicit // error, 'y' not in { x: number }
+f.explicit = d.implicit // ok 'y' in { x: number, y: number }
