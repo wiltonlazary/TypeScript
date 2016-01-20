@@ -751,3 +751,86 @@ c.explicitVoid = n => n;
 >n : number
 >n : number
 
+// class-based assignability
+class Base1 {
+>Base1 : Base1
+
+    x: number
+>x : number
+
+    public implicit(): number { return this.x; }
+>implicit : () => number
+>this.x : number
+>this : this
+>x : number
+
+    explicit(this: Base1): number { return this.x; }
+>explicit : () => number
+>this : Base1
+>Base1 : Base1
+>this.x : number
+>this : Base1
+>x : number
+}
+class Derived1 extends Base1 {
+>Derived1 : Derived1
+>Base1 : Base1
+
+    y: number
+>y : number
+}
+class Base2 {
+>Base2 : Base2
+
+    y: number
+>y : number
+
+    implicit(): number { return this.y; }
+>implicit : () => number
+>this.y : number
+>this : this
+>y : number
+
+    explicit(this: Base1): number { return this.x; }
+>explicit : () => number
+>this : Base1
+>Base1 : Base1
+>this.x : number
+>this : Base1
+>x : number
+}
+class Derived2 extends Base2 {
+>Derived2 : Derived2
+>Base2 : Base2
+
+    x: number
+>x : number
+}
+let d1 = new Derived1();
+>d1 : Derived1
+>new Derived1() : Derived1
+>Derived1 : typeof Derived1
+
+let d2 = new Derived2();
+>d2 : Derived2
+>new Derived2() : Derived2
+>Derived2 : typeof Derived2
+
+d2.implicit = d1.implicit // ok, 'x' and 'y' in { x, y } (d assignable to f and vice versa)
+>d2.implicit = d1.implicit : () => number
+>d2.implicit : () => number
+>d2 : Derived2
+>implicit : () => number
+>d1.implicit : () => number
+>d1 : Derived1
+>implicit : () => number
+
+d1.implicit = d2.implicit // ok, 'x' and 'y' in { x, y } (f assignable to d and vice versa)
+>d1.implicit = d2.implicit : () => number
+>d1.implicit : () => number
+>d1 : Derived1
+>implicit : () => number
+>d2.implicit : () => number
+>d2 : Derived2
+>implicit : () => number
+

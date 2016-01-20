@@ -137,6 +137,40 @@ c.explicitVoid = d.implicitD;
 c.explicitVoid = d.explicitD;
 c.explicitVoid = d.explicitThis;
 
+/// class-based implicit assignability (with inheritance!) ///
+
+class Base1 {
+    x: number
+    public implicit(): number { return this.x; }
+    explicit(this: Base1): number { return this.x; }
+}
+class Derived1 extends Base1 {
+    y: number
+}
+class Base2 {
+    y: number
+    implicit(): number { return this.y; }
+    explicit(this: Base1): number { return this.x; }
+}
+class Derived2 extends Base2 {
+    x: number
+}
+
+
+let b1 = new Base1();
+let d1 = new Derived1();
+let b2 = new Base2();
+let d2 = new Derived2();
+
+b1.implicit = b2.implicit // error, 'this.y' not in C: { x } (c assignable to e)
+d1.implicit = b2.implicit // error, 'y' in D: { x, y } (d assignable e) but E.implicit.this doesn't satisfy D.implicit.this (e assignable to d) (with bivariance this case is legal)
+
+b1.explicit = b2.implicit // error, 'y' not in C: { x } (c assignable to e)
+d1.explicit = b2.implicit // error, 'y' not in C: { x } (c assignable to e)
+
+d2.implicit = d1.explicit // error, 'y' in { x, y } (c assignable to f) but C.implicit.this doesn't satisfy F.implicit.this (c assignable to f?) (with bivariance this case is legal)
+b1.implicit = d2.implicit // error, 'x' and 'y' not in C: { x } (c assignable to f) (with bivarance this case is legal)
+b1.explicit = d2.implicit // error, 'x' and 'y' not in C: { x } (c assignable to f) (with bivariance this case is legal)
 
 ///// parse errors /////
 declare function notFirst(a: number, this: C): number;

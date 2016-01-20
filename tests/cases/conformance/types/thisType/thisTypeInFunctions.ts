@@ -143,3 +143,25 @@ c.explicitC = function(this: B, m: number) { return this.n + m };
 
 // this:void compatibility
 c.explicitVoid = n => n;
+
+// class-based assignability
+class Base1 {
+    x: number
+    public implicit(): number { return this.x; }
+    explicit(this: Base1): number { return this.x; }
+}
+class Derived1 extends Base1 {
+    y: number
+}
+class Base2 {
+    y: number
+    implicit(): number { return this.y; }
+    explicit(this: Base1): number { return this.x; }
+}
+class Derived2 extends Base2 {
+    x: number
+}
+let d1 = new Derived1();
+let d2 = new Derived2();
+d2.implicit = d1.implicit // ok, 'x' and 'y' in { x, y } (d assignable to f and vice versa)
+d1.implicit = d2.implicit // ok, 'x' and 'y' in { x, y } (f assignable to d and vice versa)

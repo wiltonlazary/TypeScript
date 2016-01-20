@@ -138,6 +138,40 @@ c.explicitVoid = d.implicitD;
 c.explicitVoid = d.explicitD;
 c.explicitVoid = d.explicitThis;
 
+/// class-based implicit assignability (with inheritance!) ///
+
+class Base1 {
+    x: number
+    public implicit(): number { return this.x; }
+    explicit(this: Base1): number { return this.x; }
+}
+class Derived1 extends Base1 {
+    y: number
+}
+class Base2 {
+    y: number
+    implicit(): number { return this.y; }
+    explicit(this: Base1): number { return this.x; }
+}
+class Derived2 extends Base2 {
+    x: number
+}
+
+
+let b1 = new Base1();
+let d1 = new Derived1();
+let b2 = new Base2();
+let d2 = new Derived2();
+
+b1.implicit = b2.implicit // error, 'this.y' not in C: { x } (c assignable to e)
+d1.implicit = b2.implicit // error, 'y' in D: { x, y } (d assignable e) but E.implicit.this doesn't satisfy D.implicit.this (e assignable to d) (with bivariance this case is legal)
+
+b1.explicit = b2.implicit // error, 'y' not in C: { x } (c assignable to e)
+d1.explicit = b2.implicit // error, 'y' not in C: { x } (c assignable to e)
+
+d2.implicit = d1.explicit // error, 'y' in { x, y } (c assignable to f) but C.implicit.this doesn't satisfy F.implicit.this (c assignable to f?) (with bivariance this case is legal)
+b1.implicit = d2.implicit // error, 'x' and 'y' not in C: { x } (c assignable to f) (with bivarance this case is legal)
+b1.explicit = d2.implicit // error, 'x' and 'y' not in C: { x } (c assignable to f) (with bivariance this case is legal)
 
 ///// parse errors /////
 declare function notFirst(a: number, this: C): number;
@@ -150,6 +184,11 @@ function initializer(this: C = new C()): number {
 }
 
 //// [thisTypeInFunctionsNegative.js]
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var _this = this;
 var C = (function () {
     function C() {
@@ -269,6 +308,46 @@ c.explicitThis = d.explicitThis;
 c.explicitVoid = d.implicitD;
 c.explicitVoid = d.explicitD;
 c.explicitVoid = d.explicitThis;
+/// class-based implicit assignability (with inheritance!) ///
+var Base1 = (function () {
+    function Base1() {
+    }
+    Base1.prototype.implicit = function () { return this.x; };
+    Base1.prototype.explicit = function (this) { return this.x; };
+    return Base1;
+}());
+var Derived1 = (function (_super) {
+    __extends(Derived1, _super);
+    function Derived1() {
+        _super.apply(this, arguments);
+    }
+    return Derived1;
+}(Base1));
+var Base2 = (function () {
+    function Base2() {
+    }
+    Base2.prototype.implicit = function () { return this.y; };
+    Base2.prototype.explicit = function (this) { return this.x; };
+    return Base2;
+}());
+var Derived2 = (function (_super) {
+    __extends(Derived2, _super);
+    function Derived2() {
+        _super.apply(this, arguments);
+    }
+    return Derived2;
+}(Base2));
+var b1 = new Base1();
+var d1 = new Derived1();
+var b2 = new Base2();
+var d2 = new Derived2();
+b1.implicit = b2.implicit; // error, 'this.y' not in C: { x } (c assignable to e)
+d1.implicit = b2.implicit; // error, 'y' in D: { x, y } (d assignable e) but E.implicit.this doesn't satisfy D.implicit.this (e assignable to d) (with bivariance this case is legal)
+b1.explicit = b2.implicit; // error, 'y' not in C: { x } (c assignable to e)
+d1.explicit = b2.implicit; // error, 'y' not in C: { x } (c assignable to e)
+d2.implicit = d1.explicit; // error, 'y' in { x, y } (c assignable to f) but C.implicit.this doesn't satisfy F.implicit.this (c assignable to f?) (with bivariance this case is legal)
+b1.implicit = d2.implicit; // error, 'x' and 'y' not in C: { x } (c assignable to f) (with bivarance this case is legal)
+b1.explicit = d2.implicit; // error, 'x' and 'y' not in C: { x } (c assignable to f) (with bivariance this case is legal)
 new C();
 number;
 {

@@ -583,3 +583,82 @@ c.explicitVoid = n => n;
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 144, 16))
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 144, 16))
 
+// class-based assignability
+class Base1 {
+>Base1 : Symbol(Base1, Decl(thisTypeInFunctions.ts, 144, 24))
+
+    x: number
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 147, 13))
+
+    public implicit(): number { return this.x; }
+>implicit : Symbol(implicit, Decl(thisTypeInFunctions.ts, 148, 13))
+>this.x : Symbol(x, Decl(thisTypeInFunctions.ts, 147, 13))
+>this : Symbol(Base1, Decl(thisTypeInFunctions.ts, 144, 24))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 147, 13))
+
+    explicit(this: Base1): number { return this.x; }
+>explicit : Symbol(explicit, Decl(thisTypeInFunctions.ts, 149, 48))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 150, 13))
+>Base1 : Symbol(Base1, Decl(thisTypeInFunctions.ts, 144, 24))
+>this.x : Symbol(x, Decl(thisTypeInFunctions.ts, 147, 13))
+>this : Symbol(Base1, Decl(thisTypeInFunctions.ts, 144, 24))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 147, 13))
+}
+class Derived1 extends Base1 {
+>Derived1 : Symbol(Derived1, Decl(thisTypeInFunctions.ts, 151, 1))
+>Base1 : Symbol(Base1, Decl(thisTypeInFunctions.ts, 144, 24))
+
+    y: number
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 152, 30))
+}
+class Base2 {
+>Base2 : Symbol(Base2, Decl(thisTypeInFunctions.ts, 154, 1))
+
+    y: number
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 155, 13))
+
+    implicit(): number { return this.y; }
+>implicit : Symbol(implicit, Decl(thisTypeInFunctions.ts, 156, 13))
+>this.y : Symbol(y, Decl(thisTypeInFunctions.ts, 155, 13))
+>this : Symbol(Base2, Decl(thisTypeInFunctions.ts, 154, 1))
+>y : Symbol(y, Decl(thisTypeInFunctions.ts, 155, 13))
+
+    explicit(this: Base1): number { return this.x; }
+>explicit : Symbol(explicit, Decl(thisTypeInFunctions.ts, 157, 41))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 158, 13))
+>Base1 : Symbol(Base1, Decl(thisTypeInFunctions.ts, 144, 24))
+>this.x : Symbol(Base1.x, Decl(thisTypeInFunctions.ts, 147, 13))
+>this : Symbol(Base1, Decl(thisTypeInFunctions.ts, 144, 24))
+>x : Symbol(Base1.x, Decl(thisTypeInFunctions.ts, 147, 13))
+}
+class Derived2 extends Base2 {
+>Derived2 : Symbol(Derived2, Decl(thisTypeInFunctions.ts, 159, 1))
+>Base2 : Symbol(Base2, Decl(thisTypeInFunctions.ts, 154, 1))
+
+    x: number
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 160, 30))
+}
+let d1 = new Derived1();
+>d1 : Symbol(d1, Decl(thisTypeInFunctions.ts, 163, 3))
+>Derived1 : Symbol(Derived1, Decl(thisTypeInFunctions.ts, 151, 1))
+
+let d2 = new Derived2();
+>d2 : Symbol(d2, Decl(thisTypeInFunctions.ts, 164, 3))
+>Derived2 : Symbol(Derived2, Decl(thisTypeInFunctions.ts, 159, 1))
+
+d2.implicit = d1.implicit // ok, 'x' and 'y' in { x, y } (d assignable to f and vice versa)
+>d2.implicit : Symbol(Base2.implicit, Decl(thisTypeInFunctions.ts, 156, 13))
+>d2 : Symbol(d2, Decl(thisTypeInFunctions.ts, 164, 3))
+>implicit : Symbol(Base2.implicit, Decl(thisTypeInFunctions.ts, 156, 13))
+>d1.implicit : Symbol(Base1.implicit, Decl(thisTypeInFunctions.ts, 148, 13))
+>d1 : Symbol(d1, Decl(thisTypeInFunctions.ts, 163, 3))
+>implicit : Symbol(Base1.implicit, Decl(thisTypeInFunctions.ts, 148, 13))
+
+d1.implicit = d2.implicit // ok, 'x' and 'y' in { x, y } (f assignable to d and vice versa)
+>d1.implicit : Symbol(Base1.implicit, Decl(thisTypeInFunctions.ts, 148, 13))
+>d1 : Symbol(d1, Decl(thisTypeInFunctions.ts, 163, 3))
+>implicit : Symbol(Base1.implicit, Decl(thisTypeInFunctions.ts, 148, 13))
+>d2.implicit : Symbol(Base2.implicit, Decl(thisTypeInFunctions.ts, 156, 13))
+>d2 : Symbol(d2, Decl(thisTypeInFunctions.ts, 164, 3))
+>implicit : Symbol(Base2.implicit, Decl(thisTypeInFunctions.ts, 156, 13))
+

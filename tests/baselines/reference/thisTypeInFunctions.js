@@ -145,6 +145,29 @@ c.explicitC = function(this: B, m: number) { return this.n + m };
 // this:void compatibility
 c.explicitVoid = n => n;
 
+// class-based assignability
+class Base1 {
+    x: number
+    public implicit(): number { return this.x; }
+    explicit(this: Base1): number { return this.x; }
+}
+class Derived1 extends Base1 {
+    y: number
+}
+class Base2 {
+    y: number
+    implicit(): number { return this.y; }
+    explicit(this: Base1): number { return this.x; }
+}
+class Derived2 extends Base2 {
+    x: number
+}
+let d1 = new Derived1();
+let d2 = new Derived2();
+d2.implicit = d1.implicit // ok, 'x' and 'y' in { x, y } (d assignable to f and vice versa)
+d1.implicit = d2.implicit // ok, 'x' and 'y' in { x, y } (f assignable to d and vice versa)
+
+
 //// [thisTypeInFunctions.js]
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -282,3 +305,36 @@ c.implicitThis = reconstructed.implicitThis;
 c.explicitC = function (this, m) { return this.n + m; };
 // this:void compatibility
 c.explicitVoid = function (n) { return n; };
+// class-based assignability
+var Base1 = (function () {
+    function Base1() {
+    }
+    Base1.prototype.implicit = function () { return this.x; };
+    Base1.prototype.explicit = function (this) { return this.x; };
+    return Base1;
+}());
+var Derived1 = (function (_super) {
+    __extends(Derived1, _super);
+    function Derived1() {
+        _super.apply(this, arguments);
+    }
+    return Derived1;
+}(Base1));
+var Base2 = (function () {
+    function Base2() {
+    }
+    Base2.prototype.implicit = function () { return this.y; };
+    Base2.prototype.explicit = function (this) { return this.x; };
+    return Base2;
+}());
+var Derived2 = (function (_super) {
+    __extends(Derived2, _super);
+    function Derived2() {
+        _super.apply(this, arguments);
+    }
+    return Derived2;
+}(Base2));
+var d1 = new Derived1();
+var d2 = new Derived2();
+d2.implicit = d1.implicit; // ok, 'x' and 'y' in { x, y } (d assignable to f and vice versa)
+d1.implicit = d2.implicit; // ok, 'x' and 'y' in { x, y } (f assignable to d and vice versa)
