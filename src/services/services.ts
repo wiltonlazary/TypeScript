@@ -741,7 +741,7 @@ namespace ts {
         typeParameters: TypeParameter[];
         parameters: Symbol[];
         // TODO: This is currently unused
-        thisType: Symbol;
+        thisType: Type;
         resolvedReturnType: Type;
         minArgumentCount: number;
         hasRestParameter: boolean;

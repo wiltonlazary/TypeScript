@@ -2265,7 +2265,7 @@ namespace ts {
         declaration: SignatureDeclaration;  // Originating declaration
         typeParameters: TypeParameter[];    // Type parameters (undefined if non-generic)
         parameters: Symbol[];               // Parameters
-        thisType?: Symbol;                  // symbol of this-type (undefined if not given)
+        thisType?: Type;                    // type of this-type
         /* @internal */
         resolvedReturnType: Type;           // Resolved return type
         /* @internal */

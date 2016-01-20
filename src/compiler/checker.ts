@@ -3401,7 +3401,7 @@ namespace ts {
             resolveObjectTypeMembers(type, source, typeParameters, typeArguments);
         }
 
-        function createSignature(declaration: SignatureDeclaration, typeParameters: TypeParameter[], parameters: Symbol[], thisType: Symbol,
+        function createSignature(declaration: SignatureDeclaration, typeParameters: TypeParameter[], parameters: Symbol[], thisType: Type,
             resolvedReturnType: Type, minArgumentCount: number, hasRestParameter: boolean, hasStringLiterals: boolean): Signature {
             const sig = new Signature(checker);
             sig.declaration = declaration;
@@ -3910,7 +3910,7 @@ namespace ts {
                 const parameters: Symbol[] = [];
                 let hasStringLiterals = false;
                 let minArgumentCount = -1;
-                let thisType: Symbol = undefined;
+                let thisType: Type = undefined;
                 for (let i = 0, n = declaration.parameters.length; i < n; i++) {
                     const param = declaration.parameters[i];
                     let paramSymbol = param.symbol;
@@ -3920,8 +3920,7 @@ namespace ts {
                         paramSymbol = resolvedSymbol;
                     }
                     if (paramSymbol.name === "this") {
-                        // TODO: paramSymbol is probably wrong, but so is param.type.symbol. I need more info to find out why.
-                        thisType = paramSymbol; // getTypeFromTypeNode(param.type).symbol || paramSymbol;
+                        thisType = param.type && getTypeFromTypeNode(param.type); // TODO: this with no type should be illegal, not just ignored
                         if (i !== 0) {
                             error(param, Diagnostics.this_cannot_be_referenced_in_current_location);
                         }
@@ -3949,13 +3948,7 @@ namespace ts {
                 }
                 if (!thisType) {
                     if (declaration.kind === SyntaxKind.FunctionDeclaration || declaration.kind === SyntaxKind.CallSignature || declaration.kind === SyntaxKind.FunctionType) {
-                        // TODO: This part looks like the binding pattern code that manually creates symbols.
-                        // that doesn't mean it's right though. It's probably wrong.
-                        // Create a symbol whose type is void
-                        thisType = createSymbol(SymbolFlags.Variable, "this");
-                        thisType.valueDeclaration = declaration; // hm. WRONG.
-                        thisType.declarations = [thisType.valueDeclaration];
-                        getSymbolLinks(thisType).type = voidType;
+                        thisType = voidType;
                     }
                     else if ((declaration.kind === SyntaxKind.MethodDeclaration || declaration.kind === SyntaxKind.MethodSignature) && 
                         isClassLike(declaration.parent)
@@ -3963,7 +3956,8 @@ namespace ts {
                         ) {
                         // somehow grab the this type (start with classes for now)
                         // pretty sure this is just the containing class, not the actual `this` ... but for assignability this may be correct.
-                        thisType = getSymbolOfNode(declaration.parent);
+                        thisType = getThisType(declaration.name);
+                        Debug.assert(!!thisType, "couldn't find thisType despite using a sneaky incorrect method");
                     }
                 }
 
@@ -4588,7 +4582,7 @@ namespace ts {
             return links.resolvedType;
         }
 
-        function getThisType(node: TypeNode): Type {
+        function getThisType(node: Node): Type {
             const container = getThisContainer(node, /*includeArrowFunctions*/ false);
             const parent = container && container.parent;
             if (parent && (isClassLike(parent) || parent.kind === SyntaxKind.InterfaceDeclaration)) {
@@ -4800,7 +4794,7 @@ namespace ts {
             }
             const result = createSignature(signature.declaration, freshTypeParameters,
                 instantiateList(signature.parameters, mapper, instantiateSymbol),
-                signature.thisType ? instantiateSymbol(signature.thisType, mapper) : undefined,
+                signature.thisType ? instantiateType(signature.thisType, mapper) : undefined,
                 instantiateType(signature.resolvedReturnType, mapper),
                 signature.minArgumentCount, signature.hasRestParameter, signature.hasStringLiterals);
             result.target = signature;
@@ -5690,20 +5684,12 @@ namespace ts {
                 target = getErasedSignature(target);
                 let result = Ternary.True;
                 if (source.thisType || target.thisType) {
-                    // TODO: the anyType case should only happen for methods, and it should change to be `this`, at which point
-                    // it should be an error not to have a thisType.
-                    let s: Type = target.thisType && !source.thisType ? anyType : source.thisType.flags & SymbolFlags.Instantiated ? getTypeOfSymbol(source.thisType) : (<InterfaceType>getDeclaredTypeOfSymbol(source.thisType)).thisType;
-                    if (s === undefined) {
-                        s = getDeclaredTypeOfSymbol(source.thisType);
-                    }
-                    let t: Type = source.thisType && !target.thisType ? anyType : target.thisType.flags & SymbolFlags.Instantiated ? getTypeOfSymbol(target.thisType) : (<InterfaceType>getDeclaredTypeOfSymbol(target.thisType)).thisType;
-                    if (t === undefined) {
-                        t = getDeclaredTypeOfSymbol(target.thisType);
-                    }
+                    const s = source.thisType || anyType;
+                    const t = target.thisType || anyType;
                     if (s !== voidType) {
                         // void sources are assignable to anything. Should be fine.
                         const saveErrorInfo = errorInfo;
-                        const related = isParameterRelatedTo(s, t, "this", "this");
+                        const related = isParameterRelatedTo(getApparentType(t), getApparentType(s), "this", "this");
                         if (!related) {
                             return Ternary.False;
                         }
@@ -7121,13 +7107,14 @@ namespace ts {
             if (isFunctionLike(container)) {
                 const signature = getSignatureFromDeclaration(container);
                 if (signature.thisType) {
-                    if (container.flags & NodeFlags.Static) {
-                        return getTypeOfSymbol(signature.thisType);
+                    return signature.thisType;
+                    /*if (container.flags & NodeFlags.Static) { // I think this predicate is wrong -- should be related to whether thisType itself has a thisType
+                        return getTypeOfSymbol(signature.thisSymbol);
                     }
-                    let thisType = (<InterfaceType>getDeclaredTypeOfSymbol(signature.thisType)).thisType;
+                    let thisType = (<InterfaceType>getDeclaredTypeOfSymbol(signature.thisSymbol)).thisType;
                     if (thisType) {
                         return thisType;
-                    }
+                    }*/
                 }
             }
             if (isClassLike(container.parent)) {
@@ -9093,22 +9080,19 @@ namespace ts {
 
         function checkApplicableSignature(node: CallLikeExpression, args: Expression[], signature: Signature, relation: Map<RelationComparisonResult>, excludeArgument: boolean[], reportErrors: boolean) {
             const headMessage = Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1;
-            if (signature.thisType) {
+            if (signature.thisType && signature.thisType !== voidType) {
                 // If the source is not of the form `x.f`, then sourceType = voidType
                 // If the target is voidType, then the check is skipped -- anything is compatible.
                 const sourceNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
-                const targetType = signature.thisType.flags & SymbolFlags.Instantiated ? getTypeOfSymbol(signature.thisType) : getDeclaredTypeOfSymbol(signature.thisType);
-                if (targetType && targetType !== voidType) {
-                    let sourceType: Type;
-                    if (sourceNode) {
-                        sourceType = getTypeOfNode(sourceNode);
-                    }
-                    else {
-                        sourceType = voidType;
-                    }
-                    if (!checkTypeRelatedTo(sourceType, targetType, relation, sourceNode, headMessage)) {
-                        return false;
-                    }
+                let sourceType: Type;
+                if (sourceNode) {
+                    sourceType = getTypeOfNode(sourceNode);
+                }
+                else {
+                    sourceType = voidType;
+                }
+                if (!checkTypeRelatedTo(sourceType, getApparentType(signature.thisType), relation, sourceNode, headMessage)) {
+                    return false;
                 }
             }
             const argCount = getEffectiveArgumentCount(node, args, signature);
@@ -9990,13 +9974,13 @@ namespace ts {
             // I think it should be explicitly added to the contextual type when the contextual type is created.
             // Somewhere else. 
             if (context.thisType) {
-                const contextualThisType = getTypeOfSymbol(context.thisType);
+                const contextualThisType = context.thisType;
                 if (signature.declaration.kind !== SyntaxKind.ArrowFunction) {
                     // do not contextually type thisType for ArrowFunction. 
                     // (references to `this` in an arrow function refer to an outer object)
                     // NOTE: Probably isn't safe to modify signature at this point.
-                    signature.thisType = cloneSymbol(context.thisType);
-                    assignTypeToParameterAndFixTypeParameters(signature.thisType, contextualThisType, mapper);
+                    signature.thisType = context.thisType; // cloneSymbol(context.thisSymbol);
+                    // assignTypeToParameterAndFixTypeParameters(signature.thisSymbol, contextualThisType, mapper);
                 }
             }
             const len = signature.parameters.length - (signature.hasRestParameter ? 1 : 0);
