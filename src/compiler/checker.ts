@@ -3290,7 +3290,7 @@ namespace ts {
         // Returns true if the class or interface member given by the symbol is free of "this" references. The
         // function may return false for symbols that are actually free of "this" references because it is not
         // feasible to perform a complete analysis in all cases. In particular, property members with types
-        // inferred from their initializers and function members with inferred return types are convervatively
+        // inferred from their initializers and function members with inferred return types are conservatively
         // assumed not to be free of "this" references.
         function isIndependentMember(symbol: Symbol): boolean {
             if (symbol.declarations && symbol.declarations.length === 1) {
@@ -3302,7 +3302,9 @@ namespace ts {
                             return isIndependentVariableLikeDeclaration(<VariableLikeDeclaration>declaration);
                         case SyntaxKind.MethodDeclaration:
                         case SyntaxKind.MethodSignature:
+                            return false;
                         case SyntaxKind.Constructor:
+                            // TODO: I'm not sure whether constructors allow 'this'.
                             return isIndependentFunctionLikeDeclaration(<FunctionLikeDeclaration>declaration);
                     }
                 }
@@ -5642,9 +5644,9 @@ namespace ts {
              */
             function signatureRelatedTo(source: Signature, target: Signature, reportErrors: boolean): Ternary {
                 // TODO (drosen): De-duplicate code between related functions.
-                function isParameterRelatedTo(source: Type, target: Type, sourceName: string, targetName: string): Ternary {
+                function isParameterRelatedTo(source: Type, target: Type, sourceName: string, targetName: string, bivariant: boolean = true): Ternary {
                     let related = isRelatedTo(source, target, reportErrors);
-                    if (!related) {
+                    if (!related && bivariant) {
                         related = isRelatedTo(target, source, /*reportErrors*/ false);
                         if (!related) {
                             if (reportErrors) {
@@ -5652,6 +5654,10 @@ namespace ts {
                             }
                             return Ternary.False;
                         }
+                    }
+                    else if (!related && reportErrors) {
+                        reportError(Diagnostics.Types_of_parameters_0_and_1_are_incompatible, sourceName, targetName);
+                        return Ternary.False;
                     }
                     return Ternary.True;
                 }
@@ -5689,7 +5695,7 @@ namespace ts {
                     if (s !== voidType) {
                         // void sources are assignable to anything. Should be fine.
                         const saveErrorInfo = errorInfo;
-                        const related = isParameterRelatedTo(getApparentType(t), getApparentType(s), "this", "this");
+                        const related = isParameterRelatedTo(getApparentType(t), getApparentType(s), "this", "this", /*bivariant*/ false);
                         if (!related) {
                             return Ternary.False;
                         }
@@ -7108,13 +7114,6 @@ namespace ts {
                 const signature = getSignatureFromDeclaration(container);
                 if (signature.thisType) {
                     return signature.thisType;
-                    /*if (container.flags & NodeFlags.Static) { // I think this predicate is wrong -- should be related to whether thisType itself has a thisType
-                        return getTypeOfSymbol(signature.thisSymbol);
-                    }
-                    let thisType = (<InterfaceType>getDeclaredTypeOfSymbol(signature.thisSymbol)).thisType;
-                    if (thisType) {
-                        return thisType;
-                    }*/
                 }
             }
             if (isClassLike(container.parent)) {
