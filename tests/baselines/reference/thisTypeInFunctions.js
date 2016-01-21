@@ -147,9 +147,13 @@ c.explicitVoid = n => n;
 
 // class-based assignability
 class Base1 {
-    x: number
+    x: number;
     public implicit(): number { return this.x; }
     explicit(this: Base1): number { return this.x; }
+    static implicitStatic(): number { return this.y; }
+    static explicitStatic(this: typeof Base1): number { return this.y; }
+    static y: number;
+
 }
 class Derived1 extends Base1 {
     y: number
@@ -311,6 +315,8 @@ var Base1 = (function () {
     }
     Base1.prototype.implicit = function () { return this.x; };
     Base1.prototype.explicit = function (this) { return this.x; };
+    Base1.implicitStatic = function () { return this.y; };
+    Base1.explicitStatic = function (this) { return this.y; };
     return Base1;
 }());
 var Derived1 = (function (_super) {

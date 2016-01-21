@@ -755,7 +755,7 @@ c.explicitVoid = n => n;
 class Base1 {
 >Base1 : Base1
 
-    x: number
+    x: number;
 >x : number
 
     public implicit(): number { return this.x; }
@@ -771,6 +771,24 @@ class Base1 {
 >this.x : number
 >this : Base1
 >x : number
+
+    static implicitStatic(): number { return this.y; }
+>implicitStatic : () => number
+>this.y : number
+>this : typeof Base1
+>y : number
+
+    static explicitStatic(this: typeof Base1): number { return this.y; }
+>explicitStatic : () => number
+>this : typeof Base1
+>Base1 : typeof Base1
+>this.y : number
+>this : typeof Base1
+>y : number
+
+    static y: number;
+>y : number
+
 }
 class Derived1 extends Base1 {
 >Derived1 : Derived1

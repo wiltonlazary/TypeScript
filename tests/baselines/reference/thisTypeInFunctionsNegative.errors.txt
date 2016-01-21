@@ -66,11 +66,13 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(137,1): er
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(138,1): error TS2322: Type '(m: number) => number' is not assignable to type '(m: number) => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'void' is not assignable to type 'D'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(165,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(146,51): error TS2339: Property 'x' does not exist on type 'typeof Base1'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(147,69): error TS2339: Property 'x' does not exist on type 'typeof Base1'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(167,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'Base1' is not assignable to type 'Base2'.
       Property 'y' is missing in type 'Base1'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(166,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(168,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'Derived1' is not assignable to type 'Base2'.
       Types of property 'implicit' are incompatible.
@@ -78,13 +80,13 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(166,1): er
           Types of parameters 'this' and 'this' are incompatible.
             Type 'Base2' is not assignable to type 'Derived1'.
               Property 'x' is missing in type 'Base2'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(168,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
-  Types of parameters 'this' and 'this' are incompatible.
-    Type 'Base1' is not assignable to type 'Base2'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(169,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(170,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'Base1' is not assignable to type 'Base2'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(171,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
+  Types of parameters 'this' and 'this' are incompatible.
+    Type 'Base1' is not assignable to type 'Base2'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(173,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'Derived2' is not assignable to type 'Base1'.
       Types of property 'implicit' are incompatible.
@@ -92,32 +94,32 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(171,1): er
           Types of parameters 'this' and 'this' are incompatible.
             Type 'Base1' is not assignable to type 'Derived2'.
               Property 'y' is missing in type 'Base1'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(172,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(173,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(174,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(175,1): error TS2322: Type '() => number' is not assignable to type '() => number'.
   Types of parameters 'this' and 'this' are incompatible.
     Type 'Base1' is not assignable to type 'Derived2'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(176,38): error TS2332: 'this' cannot be referenced in current location.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(177,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(177,34): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(177,38): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(178,28): error TS2370: A rest parameter must be of an array type.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(178,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(178,31): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(178,35): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,31): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,32): error TS1138: Parameter declaration expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(178,38): error TS2332: 'this' cannot be referenced in current location.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,34): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,38): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(180,28): error TS2370: A rest parameter must be of an array type.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(180,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(180,36): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(180,40): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,30): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(180,31): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(180,35): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,31): error TS1005: ',' expected.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,32): error TS1138: Parameter declaration expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,39): error TS1005: ';' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,40): error TS1128: Declaration or statement expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,42): error TS2304: Cannot find name 'number'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,49): error TS1005: ';' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,36): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,40): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,30): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,32): error TS1138: Parameter declaration expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,39): error TS1005: ';' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,40): error TS1128: Declaration or statement expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,42): error TS2304: Cannot find name 'number'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,49): error TS1005: ';' expected.
 
 
-==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (65 errors) ====
+==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (67 errors) ====
     class C {
         n: number;
         explicitThis(this: this, m: number): number {
@@ -370,6 +372,12 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,49): e
         x: number
         public implicit(): number { return this.x; }
         explicit(this: Base1): number { return this.x; }
+        static implicitStatic(): number { return this.x; }
+                                                      ~
+!!! error TS2339: Property 'x' does not exist on type 'typeof Base1'.
+        static explicitStatic(this: typeof Base1): number { return this.x; }
+                                                                        ~
+!!! error TS2339: Property 'x' does not exist on type 'typeof Base1'.
     }
     class Derived1 extends Base1 {
         y: number

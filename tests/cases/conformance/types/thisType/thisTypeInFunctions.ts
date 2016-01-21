@@ -146,9 +146,13 @@ c.explicitVoid = n => n;
 
 // class-based assignability
 class Base1 {
-    x: number
+    x: number;
     public implicit(): number { return this.x; }
     explicit(this: Base1): number { return this.x; }
+    static implicitStatic(): number { return this.y; }
+    static explicitStatic(this: typeof Base1): number { return this.y; }
+    static y: number;
+
 }
 class Derived1 extends Base1 {
     y: number
