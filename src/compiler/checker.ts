@@ -3956,7 +3956,7 @@ namespace ts {
                     }
                     else if ((declaration.kind === SyntaxKind.MethodDeclaration || declaration.kind === SyntaxKind.MethodSignature) && 
                         isClassLike(declaration.parent)
-                        && (declaration.symbol.name === 'explicit' || declaration.symbol.name === 'implicit' || declaration.symbol.name === 'implicitStatic' || declaration.symbol.name === 'explicitStatic')
+                        // && (declaration.symbol.name === 'explicit' || declaration.symbol.name === 'implicit' || declaration.symbol.name === 'implicitStatic' || declaration.symbol.name === 'explicitStatic')
                         ) {
                         if (declaration.flags & NodeFlags.Static) {
                             // grab the *static* side of this only (typeof the containing class, essentially)
@@ -5650,9 +5650,9 @@ namespace ts {
              */
             function signatureRelatedTo(source: Signature, target: Signature, reportErrors: boolean): Ternary {
                 // TODO (drosen): De-duplicate code between related functions.
-                function isParameterRelatedTo(source: Type, target: Type, sourceName: string, targetName: string, bivariant: boolean = true): Ternary {
+                function isParameterRelatedTo(source: Type, target: Type, sourceName: string, targetName: string): Ternary {
                     let related = isRelatedTo(source, target, reportErrors);
-                    if (!related && bivariant) {
+                    if (!related) {
                         related = isRelatedTo(target, source, /*reportErrors*/ false);
                         if (!related) {
                             if (reportErrors) {
@@ -5660,10 +5660,6 @@ namespace ts {
                             }
                             return Ternary.False;
                         }
-                    }
-                    else if (!related && reportErrors) {
-                        reportError(Diagnostics.Types_of_parameters_0_and_1_are_incompatible, sourceName, targetName);
-                        return Ternary.False;
                     }
                     return Ternary.True;
                 }
@@ -5701,7 +5697,7 @@ namespace ts {
                     if (s !== voidType) {
                         // void sources are assignable to anything. Should be fine.
                         const saveErrorInfo = errorInfo;
-                        const related = isParameterRelatedTo(getApparentType(t), getApparentType(s), "this", "this", /*bivariant*/ false);
+                        const related = isParameterRelatedTo(getApparentType(t), getApparentType(s), "this", "this");
                         if (!related) {
                             return Ternary.False;
                         }
@@ -9089,14 +9085,9 @@ namespace ts {
                 // If the source is not of the form `x.f`, then sourceType = voidType
                 // If the target is voidType, then the check is skipped -- anything is compatible.
                 const sourceNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
-                let sourceType: Type;
-                if (sourceNode) {
-                    sourceType = getTypeOfNode(sourceNode);
-                }
-                else {
-                    sourceType = voidType;
-                }
-                if (!checkTypeRelatedTo(sourceType, getApparentType(signature.thisType), relation, sourceNode, headMessage)) {
+                const sourceType: Type = sourceNode ? getTypeOfNode(sourceNode) : voidType;
+                const errorNode = reportErrors ? (sourceNode || node) : undefined;
+                if (!checkTypeRelatedTo(sourceType, getApparentType(signature.thisType), relation, errorNode, headMessage)) {
                     return false;
                 }
             }
