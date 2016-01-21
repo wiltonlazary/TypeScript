@@ -98,20 +98,20 @@ c.explicitProperty(15, 'too many arguments 3');
 let specifiedToImplicitVoid: (x: number) => number = explicitStructural;
 
 let reconstructed: { 
-    explicitProperty: (this: {n : number}, m: number) => number,
-    explicitC: (this: C, m: number) => number,
-    explicitThis: (this: this, m: number) => number,
-    implicitThis: (m: number) => number,
-    explicitVoid: (this: void, m: number) => number,
     n: number,
+    explicitThis(this: C, m: number): number, // note: this: this is not allowed in an object literal type.
+    implicitThis(m: number): number,
+    explicitC(this: C, m: number): number,
+    explicitProperty: (this: {n : number}, m: number) => number,
+    explicitVoid(this: void, m: number): number,
 } = { 
-    explicitProperty: c.explicitProperty, 
-    explicitC: c.explicitC, 
-    explicitThis: c.explicitThis, 
-    implicitThis: c.implicitThis, 
-    explicitVoid: c.explicitVoid,
-    n: 12 
-};
+    n: 12,
+    explicitThis: c.explicitThis,
+    implicitThis: c.implicitThis,
+    explicitC: c.explicitC,
+    explicitProperty: c.explicitProperty,
+    explicitVoid: c.explicitVoid
+};;
 
 // lambdas have this: void for assignability purposes (and this unbound (free) for body checking)
 let d = new D();
@@ -165,14 +165,10 @@ let b2 = new Base2();
 let d2 = new Derived2();
 
 b1.implicit = b2.implicit // error, 'this.y' not in C: { x } (c assignable to e)
-d1.implicit = b2.implicit // error, 'y' in D: { x, y } (d assignable e) but E.implicit.this doesn't satisfy D.implicit.this (e assignable to d) (with bivariance this case is legal)
-
 b1.explicit = b2.implicit // error, 'y' not in C: { x } (c assignable to e)
+
 d1.explicit = b2.implicit // error, 'y' not in C: { x } (c assignable to e)
 
-d2.implicit = d1.explicit // error, 'y' in { x, y } (c assignable to f) but C.implicit.this doesn't satisfy F.implicit.this (c assignable to f?) (with bivariance this case is legal)
-b1.implicit = d2.implicit // error, 'x' and 'y' not in C: { x } (c assignable to f) (with bivarance this case is legal)
-b1.explicit = d2.implicit // error, 'x' and 'y' not in C: { x } (c assignable to f) (with bivariance this case is legal)
 
 ///// parse errors /////
 declare function notFirst(a: number, this: C): number;

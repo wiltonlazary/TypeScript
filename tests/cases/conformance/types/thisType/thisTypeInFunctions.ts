@@ -87,13 +87,19 @@ d.explicitProperty(12);
 d.explicitThis(12);
 d.implicitThis(12);
 let reconstructed: { 
-    explicitProperty: (this: {n : number}, m: number) => number,
-    implicitThis: (m: number) => number,
     n: number,
+    explicitThis(this: C, m: number): number, // note: this: this is not allowed in an object literal type.
+    implicitThis(m: number): number,
+    explicitC(this: C, m: number): number,
+    explicitProperty: (this: {n : number}, m: number) => number,
+    explicitVoid(this: void, m: number): number,
 } = { 
-    explicitProperty: c.explicitProperty, 
+    n: 12,
+    explicitThis: c.explicitThis,
     implicitThis: c.implicitThis,
-    n: 12 
+    explicitC: c.explicitC,
+    explicitProperty: c.explicitProperty,
+    explicitVoid: c.explicitVoid
 };
 reconstructed.explicitProperty(11);
 reconstructed.implicitThis(11);
@@ -165,7 +171,15 @@ class Base2 {
 class Derived2 extends Base2 {
     x: number
 }
+let b1 = new Base1();
+let b2 = new Base2();
 let d1 = new Derived1();
 let d2 = new Derived2();
 d2.implicit = d1.implicit // ok, 'x' and 'y' in { x, y } (d assignable to f and vice versa)
 d1.implicit = d2.implicit // ok, 'x' and 'y' in { x, y } (f assignable to d and vice versa)
+
+// bivariance-allowed cases
+d1.implicit = b2.implicit // ok, 'y' in D: { x, y } (d assignable e) 
+d2.implicit = d1.explicit // ok, 'y' in { x, y } (c assignable to f)
+b1.implicit = d2.implicit // ok, 'x' and 'y' not in C: { x } (c assignable to f) 
+b1.explicit = d2.implicit // ok, 'x' and 'y' not in C: { x } (c assignable to f)
