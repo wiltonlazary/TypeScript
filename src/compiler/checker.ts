@@ -3949,17 +3949,23 @@ namespace ts {
                     minArgumentCount = declaration.parameters.length - (thisType ? 1 : 0);
                 }
                 if (!thisType) {
-                    if (declaration.kind === SyntaxKind.FunctionDeclaration || declaration.kind === SyntaxKind.CallSignature || declaration.kind === SyntaxKind.FunctionType) {
+                    if (declaration.kind === SyntaxKind.FunctionDeclaration 
+                        || declaration.kind === SyntaxKind.CallSignature 
+                        || declaration.kind === SyntaxKind.FunctionType) {
                         thisType = voidType;
                     }
                     else if ((declaration.kind === SyntaxKind.MethodDeclaration || declaration.kind === SyntaxKind.MethodSignature) && 
                         isClassLike(declaration.parent)
-                        && (declaration.symbol.name === 'explicit' || declaration.symbol.name === 'implicit')
+                        && (declaration.symbol.name === 'explicit' || declaration.symbol.name === 'implicit' || declaration.symbol.name === 'implicitStatic' || declaration.symbol.name === 'explicitStatic')
                         ) {
-                        // somehow grab the this type (start with classes for now)
-                        // pretty sure this is just the containing class, not the actual `this` ... but for assignability this may be correct.
-                        thisType = getThisType(declaration.name);
-                        Debug.assert(!!thisType, "couldn't find thisType despite using a sneaky incorrect method");
+                        if (declaration.flags & NodeFlags.Static) {
+                            // grab the *static* side of this only (typeof the containing class, essentially)
+                            thisType = getWidenedType(checkExpression((<ClassLikeDeclaration>declaration.parent).name));
+                        }
+                        else {
+                            thisType = getThisType(declaration.name);
+                        }
+                        Debug.assert(!!thisType, "couldn't find implicit this type");
                     }
                 }
 
