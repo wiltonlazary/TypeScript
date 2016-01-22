@@ -1822,7 +1822,7 @@ namespace ts.server {
             if (!rangeEnd) {
                 rangeEnd = this.root.charCount();
             }
-            const walkFns = {
+            const walkFns: ILineIndexWalker = {
                 goSubtree: true,
                 done: false,
                 leaf: function (relativeStart: number, relativeLength: number, ll: LineLeaf) {

@@ -3951,21 +3951,27 @@ namespace ts {
                 if (!thisType) {
                     if (declaration.kind === SyntaxKind.FunctionDeclaration 
                         || declaration.kind === SyntaxKind.CallSignature 
+                        || declaration.kind == SyntaxKind.FunctionExpression
                         || declaration.kind === SyntaxKind.FunctionType) {
                         thisType = voidType;
                     }
-                    else if ((declaration.kind === SyntaxKind.MethodDeclaration || declaration.kind === SyntaxKind.MethodSignature) && 
-                        isClassLike(declaration.parent)
-                        // && (declaration.symbol.name === 'explicit' || declaration.symbol.name === 'implicit' || declaration.symbol.name === 'implicitStatic' || declaration.symbol.name === 'explicitStatic')
+                    else if ((declaration.kind === SyntaxKind.MethodDeclaration || declaration.kind === SyntaxKind.MethodSignature)
+                        && (isClassLike(declaration.parent) || 
+                            ((declaration.symbol.name === 'implicitThis' || declaration.symbol.name === 'implicitMethod' || declaration.symbol.name === 'leaf') && 
+                                declaration.parent.kind === SyntaxKind.InterfaceDeclaration
+                               )
+                            )
+                        // TODO: might be !== ObjectLiterationExpression || TypeLiteral. Not sure.
                         ) {
                         if (declaration.flags & NodeFlags.Static) {
                             // grab the *static* side of this only (typeof the containing class, essentially)
                             thisType = getWidenedType(checkExpression((<ClassLikeDeclaration>declaration.parent).name));
+                            Debug.assert(!!thisType, "couldn't find implicit static this type");
                         }
                         else {
                             thisType = getThisType(declaration.name);
+                            Debug.assert(!!thisType, "couldn't find implicit this type");
                         }
-                        Debug.assert(!!thisType, "couldn't find implicit this type");
                     }
                 }
 
@@ -4912,7 +4918,9 @@ namespace ts {
         }
 
         function isContextSensitiveFunctionLikeDeclaration(node: FunctionLikeDeclaration) {
-            return !node.typeParameters && !forEach(node.parameters, p => p.type);
+            return !node.typeParameters && 
+                (!forEach(node.parameters, p => p.type)
+                || (node.kind !== SyntaxKind.ArrowFunction && (!node.parameters.length || (<Identifier>node.parameters[0].name).text !== "this")));
         }
 
         function getTypeWithoutSignatures(type: Type): Type {
@@ -9970,13 +9978,11 @@ namespace ts {
             // I think it should be explicitly added to the contextual type when the contextual type is created.
             // Somewhere else. 
             if (context.thisType) {
-                const contextualThisType = context.thisType;
                 if (signature.declaration.kind !== SyntaxKind.ArrowFunction) {
                     // do not contextually type thisType for ArrowFunction. 
                     // (references to `this` in an arrow function refer to an outer object)
                     // NOTE: Probably isn't safe to modify signature at this point.
-                    signature.thisType = context.thisType; // cloneSymbol(context.thisSymbol);
-                    // assignTypeToParameterAndFixTypeParameters(signature.thisSymbol, contextualThisType, mapper);
+                    signature.thisType = context.thisType;
                 }
             }
             const len = signature.parameters.length - (signature.hasRestParameter ? 1 : 0);
