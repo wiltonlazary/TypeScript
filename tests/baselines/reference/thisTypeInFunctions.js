@@ -28,8 +28,8 @@ interface I {
     explicitVoid2(this: void): number;
     explicitStructural(this: {a: number}): number;
     explicitInterface(this: I): number;
-    // explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
-    implicitMethod(): number; // defaults to `this` :(
+    explicitThis(this: this): number;
+    implicitMethod(): number;
     implicitFunction: () => number;
 }
 function explicitStructural(this: { y: number }, x: number): number {
@@ -51,9 +51,9 @@ let impl: I = {
     explicitInterface() {
         return this.a;
     },
-    //explicitThis() {
-        //return this.a;
-    //}
+    explicitThis() {
+        return this.a;
+    },
     implicitMethod() {
         return this.a;
     },
@@ -65,7 +65,7 @@ impl.explicitStructural = function() { return this.a; };
 impl.explicitInterface = function() { return this.a; };
 impl.explicitStructural = () => 12;
 impl.explicitInterface = () => 12;
-// impl.explicitThis = function () { return this.a; };
+impl.explicitThis = function () { return this.a; };
 impl.implicitMethod = function () { return this.a; };
 impl.implicitMethod = () => 12;
 impl.implicitFunction = () => this.a; // ok, this: any because it refers to some outer object (window?)
@@ -244,9 +244,9 @@ var impl = {
     explicitInterface: function () {
         return this.a;
     },
-    //explicitThis() {
-    //return this.a;
-    //}
+    explicitThis: function () {
+        return this.a;
+    },
     implicitMethod: function () {
         return this.a;
     },
@@ -258,7 +258,7 @@ impl.explicitStructural = function () { return this.a; };
 impl.explicitInterface = function () { return this.a; };
 impl.explicitStructural = function () { return 12; };
 impl.explicitInterface = function () { return 12; };
-// impl.explicitThis = function () { return this.a; };
+impl.explicitThis = function () { return this.a; };
 impl.implicitMethod = function () { return this.a; };
 impl.implicitMethod = function () { return 12; };
 impl.implicitFunction = function () { return _this.a; }; // ok, this: any because it refers to some outer object (window?)

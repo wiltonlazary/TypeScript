@@ -100,8 +100,11 @@ interface I {
 >this : I
 >I : I
 
-    // explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
-    implicitMethod(): number; // defaults to `this` :(
+    explicitThis(this: this): number;
+>explicitThis : () => number
+>this : this
+
+    implicitMethod(): number;
 >implicitMethod : () => number
 
     implicitFunction: () => number;
@@ -140,7 +143,7 @@ function implicitThis(n: number): number {
 let impl: I = {
 >impl : I
 >I : I
->{    a: 12,    explicitVoid2: () => this.a, // ok, this: any because it refers to some outer object (window?)    explicitVoid1() { return 12; },    explicitStructural() {        return this.a;    },    explicitInterface() {        return this.a;    },    //explicitThis() {        //return this.a;    //}    implicitMethod() {        return this.a;    },    implicitFunction: () => this.a, // ok, this: any because it refers to some outer object (window?)} : { a: number; explicitVoid2: () => any; explicitVoid1(): number; explicitStructural(): number; explicitInterface(): number; implicitMethod(): any; implicitFunction: () => any; }
+>{    a: 12,    explicitVoid2: () => this.a, // ok, this: any because it refers to some outer object (window?)    explicitVoid1() { return 12; },    explicitStructural() {        return this.a;    },    explicitInterface() {        return this.a;    },    explicitThis() {        return this.a;    },    implicitMethod() {        return this.a;    },    implicitFunction: () => this.a, // ok, this: any because it refers to some outer object (window?)} : { a: number; explicitVoid2: () => any; explicitVoid1(): number; explicitStructural(): number; explicitInterface(): number; explicitThis(): number; implicitMethod(): number; implicitFunction: () => any; }
 
     a: 12,
 >a : number
@@ -175,16 +178,22 @@ let impl: I = {
 >a : number
 
     },
-    //explicitThis() {
-        //return this.a;
-    //}
-    implicitMethod() {
->implicitMethod : () => any
+    explicitThis() {
+>explicitThis : () => number
 
         return this.a;
->this.a : any
->this : any
->a : any
+>this.a : number
+>this : I
+>a : number
+
+    },
+    implicitMethod() {
+>implicitMethod : () => number
+
+        return this.a;
+>this.a : number
+>this : I
+>a : number
 
     },
     implicitFunction: () => this.a, // ok, this: any because it refers to some outer object (window?)
@@ -246,16 +255,25 @@ impl.explicitInterface = () => 12;
 >() => 12 : () => number
 >12 : number
 
-// impl.explicitThis = function () { return this.a; };
+impl.explicitThis = function () { return this.a; };
+>impl.explicitThis = function () { return this.a; } : () => number
+>impl.explicitThis : () => number
+>impl : I
+>explicitThis : () => number
+>function () { return this.a; } : () => number
+>this.a : number
+>this : I
+>a : number
+
 impl.implicitMethod = function () { return this.a; };
->impl.implicitMethod = function () { return this.a; } : () => any
+>impl.implicitMethod = function () { return this.a; } : () => number
 >impl.implicitMethod : () => number
 >impl : I
 >implicitMethod : () => number
->function () { return this.a; } : () => any
->this.a : any
->this : any
->a : any
+>function () { return this.a; } : () => number
+>this.a : number
+>this : I
+>a : number
 
 impl.implicitMethod = () => 12;
 >impl.implicitMethod = () => 12 : () => number
@@ -701,55 +719,55 @@ c.explicitThis = function(this: C, m: number) { return this.n + m };
 
 // this:any compatibility
 c.explicitC = function(m: number) { return this.n + m };
->c.explicitC = function(m: number) { return this.n + m } : (m: number) => any
+>c.explicitC = function(m: number) { return this.n + m } : (m: number) => number
 >c.explicitC : (m: number) => number
 >c : C
 >explicitC : (m: number) => number
->function(m: number) { return this.n + m } : (m: number) => any
+>function(m: number) { return this.n + m } : (m: number) => number
 >m : number
->this.n + m : any
->this.n : any
->this : any
->n : any
+>this.n + m : number
+>this.n : number
+>this : C
+>n : number
 >m : number
 
 c.explicitProperty = function(m: number) { return this.n + m };
->c.explicitProperty = function(m: number) { return this.n + m } : (m: number) => any
+>c.explicitProperty = function(m: number) { return this.n + m } : (m: number) => number
 >c.explicitProperty : (m: number) => number
 >c : C
 >explicitProperty : (m: number) => number
->function(m: number) { return this.n + m } : (m: number) => any
+>function(m: number) { return this.n + m } : (m: number) => number
 >m : number
->this.n + m : any
->this.n : any
->this : any
->n : any
+>this.n + m : number
+>this.n : number
+>this : { n: number; }
+>n : number
 >m : number
 
 c.explicitThis = function(m: number) { return this.n + m };
->c.explicitThis = function(m: number) { return this.n + m } : (m: number) => any
+>c.explicitThis = function(m: number) { return this.n + m } : (m: number) => number
 >c.explicitThis : (m: number) => number
 >c : C
 >explicitThis : (m: number) => number
->function(m: number) { return this.n + m } : (m: number) => any
+>function(m: number) { return this.n + m } : (m: number) => number
 >m : number
->this.n + m : any
->this.n : any
->this : any
->n : any
+>this.n + m : number
+>this.n : number
+>this : C
+>n : number
 >m : number
 
 c.implicitThis = function(m: number) { return this.n + m };
->c.implicitThis = function(m: number) { return this.n + m } : (m: number) => any
+>c.implicitThis = function(m: number) { return this.n + m } : (m: number) => number
 >c.implicitThis : (m: number) => number
 >c : C
 >implicitThis : (m: number) => number
->function(m: number) { return this.n + m } : (m: number) => any
+>function(m: number) { return this.n + m } : (m: number) => number
 >m : number
->this.n + m : any
->this.n : any
->this : any
->n : any
+>this.n + m : number
+>this.n : number
+>this : C
+>n : number
 >m : number
 
 c.implicitThis = reconstructed.implicitThis;

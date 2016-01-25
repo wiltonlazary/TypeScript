@@ -107,7 +107,7 @@ let reconstructed: {
 } = { 
     n: 12,
     explicitThis: c.explicitThis,
-    implicitThis: c.implicitThis,
+    implicitThis: c.implicitThis, // error not assignable -- c.this:c<this> not assignable to this:void.
     explicitC: c.explicitC,
     explicitProperty: c.explicitProperty,
     explicitVoid: c.explicitVoid

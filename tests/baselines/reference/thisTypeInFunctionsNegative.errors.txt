@@ -3,6 +3,7 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(44,21): er
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(52,49): error TS2339: Property 'a' does not exist on type 'void'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(55,1): error TS2345: Argument of type 'void' is not assignable to parameter of type '{ a: number; }'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(57,1): error TS2345: Argument of type 'void' is not assignable to parameter of type 'I'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(59,1): error TS2345: Argument of type 'void' is not assignable to parameter of type 'I'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(64,21): error TS2339: Property 'notFound' does not exist on type '{ y: number; }'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(67,21): error TS2339: Property 'notSpecified' does not exist on type 'void'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(71,21): error TS2339: Property 'notSpecified' does not exist on type 'void'.
@@ -109,7 +110,7 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,42): e
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,49): error TS1005: ';' expected.
 
 
-==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (65 errors) ====
+==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (66 errors) ====
     class C {
         n: number;
         explicitThis(this: this, m: number): number {
@@ -179,6 +180,8 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,49): e
 !!! error TS2345: Argument of type 'void' is not assignable to parameter of type 'I'.
     let implImplicitMethod = impl.implicitMethod;
     implImplicitMethod(); // error, no 'a' in 'void'
+    ~~~~~~~~~~~~~~~~~~~~
+!!! error TS2345: Argument of type 'void' is not assignable to parameter of type 'I'.
     function explicitStructural(this: { y: number }, x: number): number {
         return x + this.y;
     }
@@ -275,7 +278,7 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(179,49): e
     } = { 
         n: 12,
         explicitThis: c.explicitThis,
-        implicitThis: c.implicitThis,
+        implicitThis: c.implicitThis, // error not assignable -- c.this:c<this> not assignable to this:void.
         explicitC: c.explicitC,
         explicitProperty: c.explicitProperty,
         explicitVoid: c.explicitVoid
