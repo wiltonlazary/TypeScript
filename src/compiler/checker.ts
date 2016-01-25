@@ -3923,7 +3923,7 @@ namespace ts {
                     }
                     if (paramSymbol.name === "this") {
                         thisType = param.type && getTypeFromTypeNode(param.type); // TODO: this with no type should be illegal, not just ignored
-                        if (i !== 0) {
+                        if (i !== 0 || declaration.kind === SyntaxKind.Constructor) {
                             error(param, Diagnostics.this_cannot_be_referenced_in_current_location);
                         }
                     }
