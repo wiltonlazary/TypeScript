@@ -791,3 +791,42 @@ b1.explicit = d2.implicit // ok, 'x' and 'y' not in C: { x } (c assignable to f)
 >d2 : Symbol(d2, Decl(thisTypeInFunctions.ts, 176, 3))
 >implicit : Symbol(Base2.implicit, Decl(thisTypeInFunctions.ts, 166, 13))
 
+////// use this-type for construction with new ////
+function InterfaceThis(this: I) {
+>InterfaceThis : Symbol(InterfaceThis, Decl(thisTypeInFunctions.ts, 184, 25))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 187, 23))
+>I : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
+
+    this.a = 12;
+>this.a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+>this : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
+>a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+}
+function LiteralTypeThis(this: {x: string}) {
+>LiteralTypeThis : Symbol(LiteralTypeThis, Decl(thisTypeInFunctions.ts, 189, 1))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 190, 25))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 190, 32))
+
+    this.x = "ok";
+>this.x : Symbol(x, Decl(thisTypeInFunctions.ts, 190, 32))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 190, 30))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 190, 32))
+}
+function AnyThis(this: any) {
+>AnyThis : Symbol(AnyThis, Decl(thisTypeInFunctions.ts, 192, 1))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 193, 17))
+
+    this.x = "ok";
+}
+let interfaceThis = new InterfaceThis();
+>interfaceThis : Symbol(interfaceThis, Decl(thisTypeInFunctions.ts, 196, 3))
+>InterfaceThis : Symbol(InterfaceThis, Decl(thisTypeInFunctions.ts, 184, 25))
+
+let literalTypeThis = new LiteralTypeThis();
+>literalTypeThis : Symbol(literalTypeThis, Decl(thisTypeInFunctions.ts, 197, 3))
+>LiteralTypeThis : Symbol(LiteralTypeThis, Decl(thisTypeInFunctions.ts, 189, 1))
+
+let anyThis = new AnyThis();
+>anyThis : Symbol(anyThis, Decl(thisTypeInFunctions.ts, 198, 3))
+>AnyThis : Symbol(AnyThis, Decl(thisTypeInFunctions.ts, 192, 1))
+

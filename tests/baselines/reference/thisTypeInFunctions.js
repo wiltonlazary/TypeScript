@@ -185,6 +185,20 @@ d2.implicit = d1.explicit // ok, 'y' in { x, y } (c assignable to f)
 b1.implicit = d2.implicit // ok, 'x' and 'y' not in C: { x } (c assignable to f) 
 b1.explicit = d2.implicit // ok, 'x' and 'y' not in C: { x } (c assignable to f)
 
+////// use this-type for construction with new ////
+function InterfaceThis(this: I) {
+    this.a = 12;
+}
+function LiteralTypeThis(this: {x: string}) {
+    this.x = "ok";
+}
+function AnyThis(this: any) {
+    this.x = "ok";
+}
+let interfaceThis = new InterfaceThis();
+let literalTypeThis = new LiteralTypeThis();
+let anyThis = new AnyThis();
+
 //// [thisTypeInFunctions.js]
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -367,3 +381,16 @@ d1.implicit = b2.implicit; // ok, 'y' in D: { x, y } (d assignable e)
 d2.implicit = d1.explicit; // ok, 'y' in { x, y } (c assignable to f)
 b1.implicit = d2.implicit; // ok, 'x' and 'y' not in C: { x } (c assignable to f) 
 b1.explicit = d2.implicit; // ok, 'x' and 'y' not in C: { x } (c assignable to f)
+////// use this-type for construction with new ////
+function InterfaceThis(this) {
+    this.a = 12;
+}
+function LiteralTypeThis(this) {
+    this.x = "ok";
+}
+function AnyThis(this) {
+    this.x = "ok";
+}
+var interfaceThis = new InterfaceThis();
+var literalTypeThis = new LiteralTypeThis();
+var anyThis = new AnyThis();

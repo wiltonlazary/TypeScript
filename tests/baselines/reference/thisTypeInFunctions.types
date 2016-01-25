@@ -952,3 +952,54 @@ b1.explicit = d2.implicit // ok, 'x' and 'y' not in C: { x } (c assignable to f)
 >d2 : Derived2
 >implicit : () => number
 
+////// use this-type for construction with new ////
+function InterfaceThis(this: I) {
+>InterfaceThis : () => void
+>this : I
+>I : I
+
+    this.a = 12;
+>this.a = 12 : number
+>this.a : number
+>this : I
+>a : number
+>12 : number
+}
+function LiteralTypeThis(this: {x: string}) {
+>LiteralTypeThis : () => void
+>this : { x: string; }
+>x : string
+
+    this.x = "ok";
+>this.x = "ok" : string
+>this.x : string
+>this : { x: string; }
+>x : string
+>"ok" : string
+}
+function AnyThis(this: any) {
+>AnyThis : () => void
+>this : any
+
+    this.x = "ok";
+>this.x = "ok" : string
+>this.x : any
+>this : any
+>x : any
+>"ok" : string
+}
+let interfaceThis = new InterfaceThis();
+>interfaceThis : I
+>new InterfaceThis() : I
+>InterfaceThis : () => void
+
+let literalTypeThis = new LiteralTypeThis();
+>literalTypeThis : { x: string; }
+>new LiteralTypeThis() : { x: string; }
+>LiteralTypeThis : () => void
+
+let anyThis = new AnyThis();
+>anyThis : any
+>new AnyThis() : any
+>AnyThis : () => void
+

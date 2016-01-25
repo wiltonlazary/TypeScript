@@ -169,6 +169,16 @@ b1.explicit = b2.implicit // error, 'y' not in C: { x } (c assignable to e)
 
 d1.explicit = b2.implicit // error, 'y' not in C: { x } (c assignable to e)
 
+////// use this-type for construction with new ////
+function VoidThis(this: void) {
+
+}
+function ImplicitVoidThis() {
+
+}
+let voidThis = new VoidThis();
+let implicitVoidThis = new ImplicitVoidThis();
+
 
 ///// parse errors /////
 declare function notFirst(a: number, this: C): number;
