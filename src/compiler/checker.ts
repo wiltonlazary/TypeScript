@@ -9078,9 +9078,10 @@ namespace ts {
 
         function checkApplicableSignature(node: CallLikeExpression, args: Expression[], signature: Signature, relation: Map<RelationComparisonResult>, excludeArgument: boolean[], reportErrors: boolean) {
             const headMessage = Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1;
-            if (signature.thisType && signature.thisType !== voidType) {
+            if (signature.thisType && signature.thisType !== voidType && node.kind !== SyntaxKind.NewExpression) {
                 // If the source is not of the form `x.f`, then sourceType = voidType
                 // If the target is voidType, then the check is skipped -- anything is compatible.
+                // If the the expression is a new expression, then the check is skipped.
                 const calleeNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
                 const calleeType: Type = calleeNode ? checkExpressionWithContextualType(calleeNode, signature.thisType, undefined) : voidType;
                 const errorNode = reportErrors ? (calleeNode || node) : undefined;
@@ -9768,12 +9769,15 @@ namespace ts {
             // If expressionType's apparent type is an object type with no construct signatures but
             // one or more call signatures, the expression is processed as a function call. A compile-time
             // error occurs if the result of the function call is not Void. The type of the result of the
-            // operation is Any.
+            // operation is the function's this type. It is an error to have a Void this type.
             const callSignatures = getSignaturesOfType(expressionType, SignatureKind.Call);
             if (callSignatures.length) {
                 const signature = resolveCall(node, callSignatures, candidatesOutArray);
                 if (getReturnTypeOfSignature(signature) !== voidType) {
                     error(node, Diagnostics.Only_a_void_function_can_be_called_with_the_new_keyword);
+                }
+                if (signature.thisType === voidType) {
+                    error(node, Diagnostics.A_function_that_is_called_with_the_new_keyword_cannot_have_a_this_type_that_is_void);
                 }
                 return signature;
             }
@@ -9920,10 +9924,10 @@ namespace ts {
                     if (funcSymbol && funcSymbol.members && (funcSymbol.flags & SymbolFlags.Function)) {
                         return getInferredClassType(funcSymbol);
                     }
-                    else if (compilerOptions.noImplicitAny) {
+                    else if (compilerOptions.noImplicitAny && !signature.thisType) {
                         error(node, Diagnostics.new_expression_whose_target_lacks_a_construct_signature_implicitly_has_an_any_type);
                     }
-                    return anyType;
+                    return signature.thisType || anyType;
                 }
             }
 
