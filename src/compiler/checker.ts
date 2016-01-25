@@ -3956,22 +3956,11 @@ namespace ts {
                         thisType = voidType;
                     }
                     else if ((declaration.kind === SyntaxKind.MethodDeclaration || declaration.kind === SyntaxKind.MethodSignature)
-                        && (isClassLike(declaration.parent) || 
-                            ((declaration.symbol.name === 'implicitThis' || declaration.symbol.name === 'implicitMethod' || declaration.symbol.name === 'leaf') && 
-                                declaration.parent.kind === SyntaxKind.InterfaceDeclaration
-                               )
-                            )
-                        // TODO: might be !== ObjectLiterationExpression || TypeLiteral. Not sure.
-                        ) {
-                        if (declaration.flags & NodeFlags.Static) {
-                            // grab the *static* side of this only (typeof the containing class, essentially)
-                            thisType = getWidenedType(checkExpression((<ClassLikeDeclaration>declaration.parent).name));
-                            Debug.assert(!!thisType, "couldn't find implicit static this type");
-                        }
-                        else {
-                            thisType = getThisType(declaration.name);
-                            Debug.assert(!!thisType, "couldn't find implicit this type");
-                        }
+                        && (isClassLike(declaration.parent) || declaration.parent.kind === SyntaxKind.InterfaceDeclaration)) {
+                        thisType = declaration.flags & NodeFlags.Static ? 
+                            getWidenedType(checkExpression((<ClassLikeDeclaration>declaration.parent).name)) :
+                            getThisType(declaration.name);
+                        Debug.assert(!!thisType, "couldn't find implicit this type");
                     }
                 }
 
@@ -9092,10 +9081,10 @@ namespace ts {
             if (signature.thisType && signature.thisType !== voidType) {
                 // If the source is not of the form `x.f`, then sourceType = voidType
                 // If the target is voidType, then the check is skipped -- anything is compatible.
-                const sourceNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
-                const sourceType: Type = sourceNode ? getTypeOfNode(sourceNode) : voidType;
-                const errorNode = reportErrors ? (sourceNode || node) : undefined;
-                if (!checkTypeRelatedTo(sourceType, getApparentType(signature.thisType), relation, errorNode, headMessage)) {
+                const calleeNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
+                const calleeType: Type = calleeNode ? checkExpressionWithContextualType(calleeNode, signature.thisType, undefined) : voidType;
+                const errorNode = reportErrors ? (calleeNode || node) : undefined;
+                if (!checkTypeRelatedTo(calleeType, getApparentType(signature.thisType), relation, errorNode, headMessage)) {
                     return false;
                 }
             }
