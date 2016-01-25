@@ -19,15 +19,15 @@ namespace ts {
         getChildCount(sourceFile?: SourceFile): number;
         getChildAt(index: number, sourceFile?: SourceFile): Node;
         getChildren(sourceFile?: SourceFile): Node[];
-        getStart(sourceFile?: SourceFile): number;
+        getStart(this: Node, sourceFile?: SourceFile): number;
         getFullStart(): number;
-        getEnd(): number;
+        getEnd(this: Node): number;
         getWidth(sourceFile?: SourceFile): number;
         getFullWidth(): number;
         getLeadingTriviaWidth(sourceFile?: SourceFile): number;
         getFullText(sourceFile?: SourceFile): string;
         getText(sourceFile?: SourceFile): string;
-        getFirstToken(sourceFile?: SourceFile): Node;
+        getFirstToken(this: Node, sourceFile?: SourceFile): Node;
         getLastToken(sourceFile?: SourceFile): Node;
     }
 
@@ -1016,7 +1016,7 @@ namespace ts {
     //
     export interface LanguageServiceHost {
         getCompilationSettings(): CompilerOptions;
-        getNewLine?(): string;
+        getNewLine?(this: LanguageServiceHost | LanguageServiceShimHost): string;
         getProjectVersion?(): string;
         getScriptFileNames(): string[];
         getScriptVersion(fileName: string): string;

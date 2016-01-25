@@ -119,7 +119,7 @@ module ts {
                     }
                     fileExistsIsCalled = true;
                     assert.isTrue(fileName.indexOf('/f2.') !== -1);
-                    return originalFileExists(fileName);
+                    return originalFileExists.call(serverHost, fileName);
                 };
                 let newContent = `import {x} from "f2"`;
                 rootScriptInfo.editContent(0, rootScriptInfo.content.length, newContent);
@@ -143,7 +143,7 @@ module ts {
                     }                    
                     fileExistsCalled = true;
                     assert.isTrue(fileName.indexOf('/f1.') !== -1);
-                    return originalFileExists(fileName);
+                    return originalFileExists.call(serverHost, fileName);
                 };
                 
                 let newContent = `import {x} from "f1"`;
@@ -188,7 +188,7 @@ module ts {
                     fileExistsCalledForBar = fileName.indexOf("/bar.") !== -1;
                 }
                 
-                return originalFileExists(fileName);
+                return originalFileExists.call(serverHost, fileName);
             };
             
             let { project, rootScriptInfo } = createProject(root.name, serverHost);

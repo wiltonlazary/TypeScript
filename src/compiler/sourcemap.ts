@@ -4,10 +4,10 @@
 namespace ts {
     export interface SourceMapWriter {
         getSourceMapData(): SourceMapData;
-        setSourceFile(sourceFile: SourceFile): void;
-        emitPos(pos: number): void;
-        emitStart(range: TextRange): void;
-        emitEnd(range: TextRange): void;
+        setSourceFile: (sourceFile: SourceFile) => void;
+        emitPos: (pos: number) => void;
+        emitStart: (range: TextRange) => void;
+        emitEnd: (range: TextRange) => void;
         getText(): string;
         getSourceMappingURL(): string;
         initialize(filePath: string, sourceMapFilePath: string, sourceFiles: SourceFile[], isBundledEmit: boolean): void;

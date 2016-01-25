@@ -57,7 +57,7 @@ namespace ts {
         getCancellationToken(): HostCancellationToken;
         getCurrentDirectory(): string;
         getDefaultLibFileName(options: string): string;
-        getNewLine?(): string;
+        getNewLine?(this: LanguageServiceHost | LanguageServiceShimHost): string;
         getProjectVersion?(): string;
         useCaseSensitiveFileNames?(): boolean;
         
