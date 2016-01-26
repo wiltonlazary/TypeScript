@@ -93,32 +93,33 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(167,1): er
     Type 'Base1' is not assignable to type 'Base2'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(176,16): error TS2661: A function that is called with the 'new' keyword cannot have a 'this' type that is void.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(177,24): error TS2661: A function that is called with the 'new' keyword cannot have a 'this' type that is void.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,38): error TS2332: 'this' cannot be referenced in current location.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,34): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,38): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,28): error TS2370: A rest parameter must be of an array type.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,31): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,35): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(184,31): error TS1005: ',' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(184,32): error TS1138: Parameter declaration expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(185,28): error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(185,36): error TS1003: Identifier expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(185,40): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(181,30): error TS2332: 'this' cannot be referenced in current location.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,26): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,30): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(182,57): error TS2339: Property 'n' does not exist on type 'void'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,20): error TS2370: A rest parameter must be of an array type.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,23): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,27): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(183,54): error TS2339: Property 'n' does not exist on type 'void'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(184,23): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(184,24): error TS1138: Parameter declaration expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(184,51): error TS2339: Property 'n' does not exist on type 'void'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(185,28): error TS1003: Identifier expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(185,32): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(185,59): error TS2339: Property 'n' does not exist on type 'void'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(186,30): error TS1005: ',' expected.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(186,32): error TS1138: Parameter declaration expected.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(186,39): error TS1005: ';' expected.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(186,40): error TS1128: Declaration or statement expected.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(186,42): error TS2304: Cannot find name 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(186,49): error TS1005: ';' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,1): error TS7027: Unreachable code detected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,29): error TS2304: Cannot find name 'm'.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,32): error TS1005: ';' expected.
-tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,35): error TS2304: Cannot find name 'm'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(189,1): error TS7027: Unreachable code detected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(189,29): error TS2304: Cannot find name 'm'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(189,32): error TS1005: ';' expected.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(189,35): error TS2304: Cannot find name 'm'.
 
 
-==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (74 errors) ====
+==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (75 errors) ====
     class C {
         n: number;
         explicitThis(this: this, m: number): number {
@@ -445,38 +446,40 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,35): e
     
     
     ///// parse errors /////
-    declare function notFirst(a: number, this: C): number;
-                                         ~~~~~~~
+    function notFirst(a: number, this: C): number { return this.n; }
+                                 ~~~~~~~
 !!! error TS2332: 'this' cannot be referenced in current location.
-    declare function modifiers(async this: C): number;
-                               ~~~~~~~~~~
-!!! error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-                                     ~~~~
+    function modifiers(async this: C): number { return this.n; }
+                             ~~~~
 !!! error TS1003: Identifier expected.
-                                         ~
+                                 ~
 !!! error TS1005: ',' expected.
-    declare function restParam(...this: C): number;
-                               ~~~~~~~
+                                                            ~
+!!! error TS2339: Property 'n' does not exist on type 'void'.
+    function restParam(...this: C): number { return this.n; }
+                       ~~~~~~~
 !!! error TS2370: A rest parameter must be of an array type.
-                               ~~~~~~~
-!!! error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-                                  ~~~~
+                          ~~~~
 !!! error TS1003: Identifier expected.
-                                      ~
+                              ~
 !!! error TS1005: ',' expected.
-    declare function optional(this?: C): number;
-                                  ~
+                                                         ~
+!!! error TS2339: Property 'n' does not exist on type 'void'.
+    function optional(this?: C): number { return this.n; }
+                          ~
 !!! error TS1005: ',' expected.
-                                   ~
+                           ~
 !!! error TS1138: Parameter declaration expected.
-    declare function decorated(@deco() this: C): number;
-                               ~~~~~~~~~~~~
-!!! error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
-                                       ~~~~
+                                                      ~
+!!! error TS2339: Property 'n' does not exist on type 'void'.
+    function decorated(@deco() this: C): number { return this.n; }
+                               ~~~~
 !!! error TS1003: Identifier expected.
-                                           ~
+                                   ~
 !!! error TS1005: ',' expected.
-    function initializer(this: C = new C()): number {
+                                                              ~
+!!! error TS2339: Property 'n' does not exist on type 'void'.
+    function initializer(this: C = new C()): number { return this.n; }
                                  ~
 !!! error TS1005: ',' expected.
                                    ~~~
@@ -489,8 +492,6 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,35): e
 !!! error TS2304: Cannot find name 'number'.
                                                     ~
 !!! error TS1005: ';' expected.
-        return this.n;
-    }
     
     // can't name parameters 'this' in a lambda.
     c.explicitProperty = (this, m) => m + this.n;

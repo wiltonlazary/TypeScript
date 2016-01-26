@@ -179,14 +179,12 @@ let implicitVoidThis = new ImplicitVoidThis();
 
 
 ///// parse errors /////
-declare function notFirst(a: number, this: C): number;
-declare function modifiers(async this: C): number;
-declare function restParam(...this: C): number;
-declare function optional(this?: C): number;
-declare function decorated(@deco() this: C): number;
-function initializer(this: C = new C()): number {
-    return this.n;
-}
+function notFirst(a: number, this: C): number { return this.n; }
+function modifiers(async this: C): number { return this.n; }
+function restParam(...this: C): number { return this.n; }
+function optional(this?: C): number { return this.n; }
+function decorated(@deco() this: C): number { return this.n; }
+function initializer(this: C = new C()): number { return this.n; }
 
 // can't name parameters 'this' in a lambda.
 c.explicitProperty = (this, m) => m + this.n;
@@ -360,6 +358,18 @@ function ImplicitVoidThis() {
 }
 var voidThis = new VoidThis();
 var implicitVoidThis = new ImplicitVoidThis();
+///// parse errors /////
+function notFirst(a, this) { return this.n; }
+function modifiers(, C) {
+    if ( === void 0) {  = this; }
+    return this.n;
+}
+function restParam(, C) { return this.n; }
+function optional(C) { return this.n; }
+function decorated(, C) {
+    if ( === void 0) {  = this; }
+    return this.n;
+}
 new C();
 number;
 {

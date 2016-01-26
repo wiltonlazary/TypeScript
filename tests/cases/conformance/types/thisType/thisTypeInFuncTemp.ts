@@ -1,8 +1,3 @@
-function f(this: void, x: number) {
-    return x;
+function f(this: { y: number } = { y: 1 }, x: number = 2) {
+    return x + this.y;
 }
-function g(y: number) {
-    return y;
-}
-let x = f();
-let y = g();
