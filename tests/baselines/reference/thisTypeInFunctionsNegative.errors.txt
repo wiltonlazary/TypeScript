@@ -13,6 +13,7 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(74,97): er
   Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ y: string; f: (x: number) => number; }'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(75,110): error TS2322: Type '{ wrongName: number; explicitStructural: (x: number) => number; }' is not assignable to type '{ wrongName: number; f: (x: number) => number; }'.
   Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ wrongName: number; f: (x: number) => number; }'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(77,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(78,6): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(79,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(80,1): error TS2345: Argument of type '{ y: string; f: (x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
@@ -20,12 +21,16 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(80,1): err
     Type 'string' is not assignable to type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(81,1): error TS2345: Argument of type '{ wrongName: number; f: (x: number) => number; }' is not assignable to parameter of type '{ y: number; }'.
   Property 'y' is missing in type '{ wrongName: number; f: (x: number) => number; }'.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(84,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(85,13): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(86,1): error TS2346: Supplied parameters do not match any signature of call target.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(87,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(88,16): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(89,1): error TS2346: Supplied parameters do not match any signature of call target.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(90,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(91,16): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(92,1): error TS2346: Supplied parameters do not match any signature of call target.
+tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(93,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(94,20): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(95,1): error TS2346: Supplied parameters do not match any signature of call target.
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(98,5): error TS2322: Type '(x: number) => number' is not assignable to type '(x: number) => number'.
@@ -113,7 +118,7 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,32): e
 tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,35): error TS2304: Cannot find name 'm'.
 
 
-==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (69 errors) ====
+==== tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts (74 errors) ====
     class C {
         n: number;
         explicitThis(this: this, m: number): number {
@@ -218,6 +223,8 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,35): e
 !!! error TS2322:   Object literal may only specify known properties, and 'explicitStructural' does not exist in type '{ wrongName: number; f: (x: number) => number; }'.
     
     ok.f(); // not enough arguments
+    ~~~~~~
+!!! error TS2346: Supplied parameters do not match any signature of call target.
     ok.f('wrong type');
          ~~~~~~~~~~~~
 !!! error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
@@ -235,28 +242,36 @@ tests/cases/conformance/types/thisType/thisTypeInFunctionsNegative.ts(191,35): e
 !!! error TS2345:   Property 'y' is missing in type '{ wrongName: number; f: (x: number) => number; }'.
     
     let c = new C();
-    c.explicitC();
+    c.explicitC(); // not enough arguments
+    ~~~~~~~~~~~~~
+!!! error TS2346: Supplied parameters do not match any signature of call target.
     c.explicitC('wrong type');
                 ~~~~~~~~~~~~
 !!! error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
     c.explicitC(13, 'too many arguments');
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !!! error TS2346: Supplied parameters do not match any signature of call target.
-    c.explicitThis();
+    c.explicitThis(); // not enough arguments
+    ~~~~~~~~~~~~~~~~
+!!! error TS2346: Supplied parameters do not match any signature of call target.
     c.explicitThis('wrong type 2');
                    ~~~~~~~~~~~~~~
 !!! error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
     c.explicitThis(14, 'too many arguments 2');
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !!! error TS2346: Supplied parameters do not match any signature of call target.
-    c.implicitThis();
+    c.implicitThis(); // not enough arguments
+    ~~~~~~~~~~~~~~~~
+!!! error TS2346: Supplied parameters do not match any signature of call target.
     c.implicitThis('wrong type 2');
                    ~~~~~~~~~~~~~~
 !!! error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
     c.implicitThis(14, 'too many arguments 2');
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !!! error TS2346: Supplied parameters do not match any signature of call target.
-    c.explicitProperty();
+    c.explicitProperty(); // not enough arguments
+    ~~~~~~~~~~~~~~~~~~~~
+!!! error TS2346: Supplied parameters do not match any signature of call target.
     c.explicitProperty('wrong type 3');
                        ~~~~~~~~~~~~~~
 !!! error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.

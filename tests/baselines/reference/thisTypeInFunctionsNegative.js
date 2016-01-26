@@ -82,16 +82,16 @@ wrongPropertyType.f(13);
 wrongPropertyName.f(13);
 
 let c = new C();
-c.explicitC();
+c.explicitC(); // not enough arguments
 c.explicitC('wrong type');
 c.explicitC(13, 'too many arguments');
-c.explicitThis();
+c.explicitThis(); // not enough arguments
 c.explicitThis('wrong type 2');
 c.explicitThis(14, 'too many arguments 2');
-c.implicitThis();
+c.implicitThis(); // not enough arguments
 c.implicitThis('wrong type 2');
 c.implicitThis(14, 'too many arguments 2');
-c.explicitProperty();
+c.explicitProperty(); // not enough arguments
 c.explicitProperty('wrong type 3');
 c.explicitProperty(15, 'too many arguments 3');
 
@@ -274,16 +274,16 @@ ok.f(13, 'too many arguments');
 wrongPropertyType.f(13);
 wrongPropertyName.f(13);
 var c = new C();
-c.explicitC();
+c.explicitC(); // not enough arguments
 c.explicitC('wrong type');
 c.explicitC(13, 'too many arguments');
-c.explicitThis();
+c.explicitThis(); // not enough arguments
 c.explicitThis('wrong type 2');
 c.explicitThis(14, 'too many arguments 2');
-c.implicitThis();
+c.implicitThis(); // not enough arguments
 c.implicitThis('wrong type 2');
 c.implicitThis(14, 'too many arguments 2');
-c.explicitProperty();
+c.explicitProperty(); // not enough arguments
 c.explicitProperty('wrong type 3');
 c.explicitProperty(15, 'too many arguments 3');
 // oops, this triggers contextual typing, which needs to be updated to understand that =>'s `this` is void.

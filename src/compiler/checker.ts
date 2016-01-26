@@ -8952,7 +8952,7 @@ namespace ts {
             }
 
             // If the call is incomplete, we should skip the lower bound check.
-            const hasEnoughArguments = adjustedArgCount >= signature.minArgumentCount - (signature.thisType ? 1 : 0);
+            const hasEnoughArguments = adjustedArgCount >= signature.minArgumentCount;
             return callIsIncomplete || hasEnoughArguments;
         }
 
