@@ -199,6 +199,13 @@ let interfaceThis = new InterfaceThis();
 let literalTypeThis = new LiteralTypeThis();
 let anyThis = new AnyThis();
 
+//// type parameter inference ////
+declare var f: { 
+    (this: void, x: number): number, 
+    call<U>(this: (...argArray: any[]) => U, ...argArray: any[]): U;
+};
+let n: number = f.call(12);
+
 //// [thisTypeInFunctions.js]
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -394,3 +401,4 @@ function AnyThis(this) {
 var interfaceThis = new InterfaceThis();
 var literalTypeThis = new LiteralTypeThis();
 var anyThis = new AnyThis();
+var n = f.call(12);

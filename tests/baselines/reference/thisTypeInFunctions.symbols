@@ -830,3 +830,27 @@ let anyThis = new AnyThis();
 >anyThis : Symbol(anyThis, Decl(thisTypeInFunctions.ts, 198, 3))
 >AnyThis : Symbol(AnyThis, Decl(thisTypeInFunctions.ts, 192, 1))
 
+//// type parameter inference ////
+declare var f: { 
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 201, 11))
+
+    (this: void, x: number): number, 
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 202, 5))
+>x : Symbol(x, Decl(thisTypeInFunctions.ts, 202, 16))
+
+    call<U>(this: (...argArray: any[]) => U, ...argArray: any[]): U;
+>call : Symbol(call, Decl(thisTypeInFunctions.ts, 202, 36))
+>U : Symbol(U, Decl(thisTypeInFunctions.ts, 203, 9))
+>this : Symbol(this, Decl(thisTypeInFunctions.ts, 203, 12))
+>argArray : Symbol(argArray, Decl(thisTypeInFunctions.ts, 203, 19))
+>U : Symbol(U, Decl(thisTypeInFunctions.ts, 203, 9))
+>argArray : Symbol(argArray, Decl(thisTypeInFunctions.ts, 203, 44))
+>U : Symbol(U, Decl(thisTypeInFunctions.ts, 203, 9))
+
+};
+let n: number = f.call(12);
+>n : Symbol(n, Decl(thisTypeInFunctions.ts, 205, 3))
+>f.call : Symbol(call, Decl(thisTypeInFunctions.ts, 202, 36))
+>f : Symbol(f, Decl(thisTypeInFunctions.ts, 201, 11))
+>call : Symbol(call, Decl(thisTypeInFunctions.ts, 202, 36))
+

@@ -197,3 +197,10 @@ function AnyThis(this: any) {
 let interfaceThis = new InterfaceThis();
 let literalTypeThis = new LiteralTypeThis();
 let anyThis = new AnyThis();
+
+//// type parameter inference ////
+declare var f: { 
+    (this: void, x: number): number, 
+    call<U>(this: (...argArray: any[]) => U, ...argArray: any[]): U;
+};
+let n: number = f.call(12);

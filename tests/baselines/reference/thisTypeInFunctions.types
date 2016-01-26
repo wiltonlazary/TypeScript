@@ -1003,3 +1003,29 @@ let anyThis = new AnyThis();
 >new AnyThis() : any
 >AnyThis : () => void
 
+//// type parameter inference ////
+declare var f: { 
+>f : { (x: number): number; call<U>(...argArray: any[]): U; }
+
+    (this: void, x: number): number, 
+>this : void
+>x : number
+
+    call<U>(this: (...argArray: any[]) => U, ...argArray: any[]): U;
+>call : <U>(...argArray: any[]) => U
+>U : U
+>this : (...argArray: any[]) => U
+>argArray : any[]
+>U : U
+>argArray : any[]
+>U : U
+
+};
+let n: number = f.call(12);
+>n : number
+>f.call(12) : number
+>f.call : <U>(...argArray: any[]) => U
+>f : { (x: number): number; call<U>(...argArray: any[]): U; }
+>call : <U>(...argArray: any[]) => U
+>12 : number
+
