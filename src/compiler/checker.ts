@@ -3949,15 +3949,15 @@ namespace ts {
                     minArgumentCount = declaration.parameters.length - (thisType ? 1 : 0);
                 }
                 if (!thisType) {
-                    if (declaration.kind === SyntaxKind.FunctionDeclaration 
-                        || declaration.kind === SyntaxKind.CallSignature 
+                    if (declaration.kind === SyntaxKind.FunctionDeclaration
+                        || declaration.kind === SyntaxKind.CallSignature
                         || declaration.kind == SyntaxKind.FunctionExpression
                         || declaration.kind === SyntaxKind.FunctionType) {
                         thisType = voidType;
                     }
                     else if ((declaration.kind === SyntaxKind.MethodDeclaration || declaration.kind === SyntaxKind.MethodSignature)
                         && (isClassLike(declaration.parent) || declaration.parent.kind === SyntaxKind.InterfaceDeclaration)) {
-                        thisType = declaration.flags & NodeFlags.Static ? 
+                        thisType = declaration.flags & NodeFlags.Static ?
                             getWidenedType(checkExpression((<ClassLikeDeclaration>declaration.parent).name)) :
                             getThisType(declaration.name);
                         Debug.assert(!!thisType, "couldn't find implicit this type");
@@ -4907,7 +4907,7 @@ namespace ts {
         }
 
         function isContextSensitiveFunctionLikeDeclaration(node: FunctionLikeDeclaration) {
-            return !node.typeParameters && 
+            return !node.typeParameters &&
                 (!forEach(node.parameters, p => p.type)
                 || (node.kind !== SyntaxKind.ArrowFunction && (!node.parameters.length || (<Identifier>node.parameters[0].name).text !== "this")));
         }

@@ -128,7 +128,7 @@ namespace Playback {
     function initWrapper(wrapper: PlaybackIO, underlying: Harness.IO): void;
     function initWrapper(wrapper: PlaybackSystem | PlaybackIO, underlying: ts.System | Harness.IO): void {
         // TODO: Define a common interface over ts.System | Harness.IO and stop passing a union type.
-        var underlyingShim: any = underlying;
+        const underlyingShim: any = underlying;
         ts.forEach(Object.keys(underlying), prop => {
             (<any>wrapper)[prop] = (<any>underlying)[prop];
         });
