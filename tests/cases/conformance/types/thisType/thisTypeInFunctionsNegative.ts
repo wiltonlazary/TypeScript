@@ -117,9 +117,6 @@ let reconstructed: {
 let d = new D();
 let explicitXProperty: (this: { x: number }, m: number) => number;
 
-// can't name parameters 'this' in a lambda.
-c.explicitProperty = (this, m) => m + this.n;
-
 // from differing object types
 c.explicitC = function(this: D, m: number) { return this.x + m };
 c.explicitProperty = explicitXProperty;
@@ -189,3 +186,6 @@ declare function decorated(@deco() this: C): number;
 function initializer(this: C = new C()): number {
     return this.n;
 }
+
+// can't name parameters 'this' in a lambda.
+c.explicitProperty = (this, m) => m + this.n;

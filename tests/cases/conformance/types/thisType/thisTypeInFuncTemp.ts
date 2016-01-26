@@ -1,4 +1,3 @@
-function AnyThis(this: any) {
-    this.x = 'who knows really'
+function f(this: void, x: number) {
+    return x;
 }
-let anyThis = new AnyThis();

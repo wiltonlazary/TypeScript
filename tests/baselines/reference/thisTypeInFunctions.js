@@ -217,19 +217,19 @@ var _this = this;
 var C = (function () {
     function C() {
     }
-    C.prototype.explicitThis = function (this, m) {
+    C.prototype.explicitThis = function (m) {
         return this.n + m;
     };
     C.prototype.implicitThis = function (m) {
         return this.n + m;
     };
-    C.prototype.explicitC = function (this, m) {
+    C.prototype.explicitC = function (m) {
         return this.n + m;
     };
-    C.prototype.explicitProperty = function (this, m) {
+    C.prototype.explicitProperty = function (m) {
         return this.n + m;
     };
-    C.prototype.explicitVoid = function (this, m) {
+    C.prototype.explicitVoid = function (m) {
         return m + 1;
     };
     return C;
@@ -246,10 +246,10 @@ var B = (function () {
     }
     return B;
 }());
-function explicitStructural(this, x) {
+function explicitStructural(x) {
     return x + this.y;
 }
-function justThis(this) {
+function justThis() {
     return this.y;
 }
 function implicitThis(n) {
@@ -321,9 +321,9 @@ var specifiedLambdaToSpecified = specifiedLambda;
 var explicitCFunction;
 var explicitPropertyFunction;
 c.explicitC = explicitCFunction;
-c.explicitC = function (this, m) { return this.n + m; };
+c.explicitC = function (m) { return this.n + m; };
 c.explicitProperty = explicitPropertyFunction;
-c.explicitProperty = function (this, m) { return this.n + m; };
+c.explicitProperty = function (m) { return this.n + m; };
 c.explicitProperty = reconstructed.explicitProperty;
 // lambdas are assignable to anything
 c.explicitC = function (m) { return m; };
@@ -336,14 +336,14 @@ c.explicitThis = function (m) { return m + _this.n; };
 c.explicitProperty = function (m) { return m + _this.n; };
 //NOTE: this=C here, I guess?
 c.explicitThis = explicitCFunction;
-c.explicitThis = function (this, m) { return this.n + m; };
+c.explicitThis = function (m) { return this.n + m; };
 // this:any compatibility
 c.explicitC = function (m) { return this.n + m; };
 c.explicitProperty = function (m) { return this.n + m; };
 c.explicitThis = function (m) { return this.n + m; };
 c.implicitThis = function (m) { return this.n + m; };
 c.implicitThis = reconstructed.implicitThis;
-c.explicitC = function (this, m) { return this.n + m; };
+c.explicitC = function (m) { return this.n + m; };
 // this:void compatibility
 c.explicitVoid = function (n) { return n; };
 // class-based assignability
@@ -351,9 +351,9 @@ var Base1 = (function () {
     function Base1() {
     }
     Base1.prototype.implicit = function () { return this.x; };
-    Base1.prototype.explicit = function (this) { return this.x; };
+    Base1.prototype.explicit = function () { return this.x; };
     Base1.implicitStatic = function () { return this.y; };
-    Base1.explicitStatic = function (this) { return this.y; };
+    Base1.explicitStatic = function () { return this.y; };
     return Base1;
 }());
 var Derived1 = (function (_super) {
@@ -367,7 +367,7 @@ var Base2 = (function () {
     function Base2() {
     }
     Base2.prototype.implicit = function () { return this.y; };
-    Base2.prototype.explicit = function (this) { return this.x; };
+    Base2.prototype.explicit = function () { return this.x; };
     return Base2;
 }());
 var Derived2 = (function (_super) {
@@ -389,13 +389,13 @@ d2.implicit = d1.explicit; // ok, 'y' in { x, y } (c assignable to f)
 b1.implicit = d2.implicit; // ok, 'x' and 'y' not in C: { x } (c assignable to f) 
 b1.explicit = d2.implicit; // ok, 'x' and 'y' not in C: { x } (c assignable to f)
 ////// use this-type for construction with new ////
-function InterfaceThis(this) {
+function InterfaceThis() {
     this.a = 12;
 }
-function LiteralTypeThis(this) {
+function LiteralTypeThis() {
     this.x = "ok";
 }
-function AnyThis(this) {
+function AnyThis() {
     this.x = "ok";
 }
 var interfaceThis = new InterfaceThis();

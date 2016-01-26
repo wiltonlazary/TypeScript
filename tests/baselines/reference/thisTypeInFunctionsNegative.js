@@ -118,9 +118,6 @@ let reconstructed: {
 let d = new D();
 let explicitXProperty: (this: { x: number }, m: number) => number;
 
-// can't name parameters 'this' in a lambda.
-c.explicitProperty = (this, m) => m + this.n;
-
 // from differing object types
 c.explicitC = function(this: D, m: number) { return this.x + m };
 c.explicitProperty = explicitXProperty;
@@ -191,6 +188,10 @@ function initializer(this: C = new C()): number {
     return this.n;
 }
 
+// can't name parameters 'this' in a lambda.
+c.explicitProperty = (this, m) => m + this.n;
+
+
 //// [thisTypeInFunctionsNegative.js]
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -201,19 +202,19 @@ var _this = this;
 var C = (function () {
     function C() {
     }
-    C.prototype.explicitThis = function (this, m) {
+    C.prototype.explicitThis = function (m) {
         return this.n + m;
     };
     C.prototype.implicitThis = function (m) {
         return this.n + m;
     };
-    C.prototype.explicitC = function (this, m) {
+    C.prototype.explicitC = function (m) {
         return this.n + m;
     };
-    C.prototype.explicitProperty = function (this, m) {
+    C.prototype.explicitProperty = function (m) {
         return this.n + m;
     };
-    C.prototype.explicitVoid = function (this, m) {
+    C.prototype.explicitVoid = function (m) {
         return this.n + m; // 'n' doesn't exist on type 'void'.
     };
     return C;
@@ -221,10 +222,10 @@ var C = (function () {
 var D = (function () {
     function D() {
     }
-    D.prototype.explicitThis = function (this, m) {
+    D.prototype.explicitThis = function (m) {
         return this.x + m;
     };
-    D.prototype.explicitD = function (this, m) {
+    D.prototype.explicitD = function (m) {
         return this.x + m;
     };
     D.prototype.implicitD = function (m) {
@@ -251,13 +252,13 @@ var implExplicitInterface = impl.explicitInterface;
 implExplicitInterface(); // error, no 'a' in 'void' 
 var implImplicitMethod = impl.implicitMethod;
 implImplicitMethod(); // error, no 'a' in 'void'
-function explicitStructural(this, x) {
+function explicitStructural(x) {
     return x + this.y;
 }
-function propertyName(this, x) {
+function propertyName(x) {
     return x + this.notFound;
 }
-function voidThisSpecified(this, x) {
+function voidThisSpecified(x) {
     return x + this.notSpecified;
 }
 function noThisSpecified(x) {
@@ -299,11 +300,8 @@ var reconstructed = {
 // lambdas have this: void for assignability purposes (and this unbound (free) for body checking)
 var d = new D();
 var explicitXProperty;
-// can't name parameters 'this' in a lambda.
-c.explicitProperty = (this, m);
-m + this.n;
 // from differing object types
-c.explicitC = function (this, m) { return this.x + m; };
+c.explicitC = function (m) { return this.x + m; };
 c.explicitProperty = explicitXProperty;
 c.explicitC = d.implicitD;
 c.explicitC = d.explicitD;
@@ -322,9 +320,9 @@ var Base1 = (function () {
     function Base1() {
     }
     Base1.prototype.implicit = function () { return this.x; };
-    Base1.prototype.explicit = function (this) { return this.x; };
+    Base1.prototype.explicit = function () { return this.x; };
     Base1.implicitStatic = function () { return this.x; };
-    Base1.explicitStatic = function (this) { return this.x; };
+    Base1.explicitStatic = function () { return this.x; };
     return Base1;
 }());
 var Derived1 = (function (_super) {
@@ -338,7 +336,7 @@ var Base2 = (function () {
     function Base2() {
     }
     Base2.prototype.implicit = function () { return this.y; };
-    Base2.prototype.explicit = function (this) { return this.x; };
+    Base2.prototype.explicit = function () { return this.x; };
     return Base2;
 }());
 var Derived2 = (function (_super) {
@@ -356,7 +354,7 @@ b1.implicit = b2.implicit; // error, 'this.y' not in C: { x } (c assignable to e
 b1.explicit = b2.implicit; // error, 'y' not in C: { x } (c assignable to e)
 d1.explicit = b2.implicit; // error, 'y' not in C: { x } (c assignable to e)
 ////// use this-type for construction with new ////
-function VoidThis(this) {
+function VoidThis() {
 }
 function ImplicitVoidThis() {
 }
@@ -367,3 +365,6 @@ number;
 {
     return this.n;
 }
+// can't name parameters 'this' in a lambda.
+c.explicitProperty = (this, m);
+m + this.n;
