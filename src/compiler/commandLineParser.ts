@@ -126,6 +126,10 @@ namespace ts {
             type: "boolean",
         },
         {
+            name: "strictThis",
+            type: "boolean",
+        },
+        {
             name: "out",
             type: "string",
             isFilePath: false, // This is intentionally broken to support compatability with existing tsconfig files

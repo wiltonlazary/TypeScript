@@ -3955,7 +3955,7 @@ namespace ts {
                 if (minArgumentCount < 0) {
                     minArgumentCount = declaration.parameters.length - (thisType ? 1 : 0);
                 }
-                if (!thisType) {
+                if (!thisType && compilerOptions.strictThis) {
                     if (declaration.kind === SyntaxKind.FunctionDeclaration
                         || declaration.kind === SyntaxKind.CallSignature
                         || declaration.kind == SyntaxKind.FunctionExpression
