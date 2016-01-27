@@ -3929,7 +3929,7 @@ namespace ts {
                         paramSymbol = resolvedSymbol;
                     }
                     if (paramSymbol.name === "this") {
-                        thisType = param.type && getTypeFromTypeNode(param.type); // TODO: this with no type should be illegal, not just ignored
+                        thisType = param.type && getTypeOfSymbol(paramSymbol);
                         if (i !== 0 || declaration.kind === SyntaxKind.Constructor) {
                             error(param, Diagnostics.this_cannot_be_referenced_in_current_location);
                         }
@@ -9991,13 +9991,9 @@ namespace ts {
         }
 
         function assignContextualParameterTypes(signature: Signature, context: Signature, mapper: TypeMapper) {
-            // TODO: Should a contextual type provide a default this-type (void/this) if it is not specified?
-            // I think it should be explicitly added to the contextual type when the contextual type is created.
-            // Somewhere else. 
             if (context.thisType) {
                 if (signature.declaration.kind !== SyntaxKind.ArrowFunction) {
                     // do not contextually type thisType for ArrowFunction. 
-                    // (references to `this` in an arrow function refer to an outer object)
                     // NOTE: Probably isn't safe to modify signature at this point.
                     signature.thisType = context.thisType;
                 }
@@ -15084,8 +15080,10 @@ namespace ts {
 
                 case SyntaxKind.ThisKeyword:
                 case SyntaxKind.SuperKeyword:
-                    const type = isExpression(node) ? checkExpression(<Expression>node) : getTypeFromTypeNode(<TypeNode>node);
-                    return type.symbol;
+                    if (isExpression(node)) {
+                        return undefined;
+                    }
+                    return getTypeFromTypeNode(<TypeNode>node).symbol;
 
                 case SyntaxKind.ThisType:
                     return getTypeFromTypeNode(<TypeNode>node).symbol;
