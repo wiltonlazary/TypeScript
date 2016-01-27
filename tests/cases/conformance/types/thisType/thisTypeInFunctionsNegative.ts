@@ -1,3 +1,4 @@
+// @strictThis: true
 class C {
     n: number;
     explicitThis(this: this, m: number): number {
@@ -34,8 +35,8 @@ interface I {
     explicitVoid2(this: void): number;
     explicitStructural(this: {a: number}): number;
     explicitInterface(this: I): number;
-    // explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
-    implicitMethod(): number; // defaults to `this` :(
+    explicitThis(this: this): number; // TODO: Allow `this` types for interfaces
+    implicitMethod(): number;
     implicitFunction: () => number;
 }
 let impl: I = {
@@ -46,6 +47,9 @@ let impl: I = {
     explicitVoid2: () => this.a, // ok, `this:any` because it refers to an outer object
     explicitStructural: () => 12,
     explicitInterface: () => 12,
+    explicitThis() {
+        return this.a;
+    },
     implicitMethod() {
         return this.a; // ok, I.a: number
     },

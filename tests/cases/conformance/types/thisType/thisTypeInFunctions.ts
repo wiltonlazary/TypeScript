@@ -1,3 +1,4 @@
+// @strictThis: true
 // body checking
 class C {
     n: number;
