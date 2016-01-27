@@ -206,6 +206,8 @@ declare var f: {
 };
 let n: number = f.call(12);
 
+function missingTypeIsImplicitAny(this, a: number) { return a; } 
+
 //// [thisTypeInFunctions.js]
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -402,3 +404,4 @@ var interfaceThis = new InterfaceThis();
 var literalTypeThis = new LiteralTypeThis();
 var anyThis = new AnyThis();
 var n = f.call(12);
+function missingTypeIsImplicitAny(a) { return a; }

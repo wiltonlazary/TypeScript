@@ -204,3 +204,5 @@ declare var f: {
     call<U>(this: (...argArray: any[]) => U, ...argArray: any[]): U;
 };
 let n: number = f.call(12);
+
+function missingTypeIsImplicitAny(this, a: number) { return a; } 
