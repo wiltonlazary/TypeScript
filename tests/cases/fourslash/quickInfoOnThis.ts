@@ -28,22 +28,25 @@
 ////function explicitVoid(th/*8*/is: void, x: number): void {
 ////    return th/*9*/is;
 ////}
-////function g(th/*10*/is: Restricted): void {
+////function explicitInterface(th/*10*/is: Restricted): void {
 ////    console.log(thi/*11*/s);
+////}
+////function explicitLiteral(th/*12*/is: { n: number }): void {
+////    console.log(th/*13*/is);
 ////}
 
 goTo.marker('1');
 verify.quickInfoIs('void');
 goTo.marker('2');
-verify.quickInfoIs('this');
+verify.quickInfoIs('this: Foo');
 goTo.marker('3');
 verify.quickInfoIs('(parameter) this: Restricted');
 goTo.marker('4');
-verify.quickInfoIs('Restricted');
+verify.quickInfoIs('this: Restricted');
 goTo.marker('5');
 verify.quickInfoIs('(parameter) this: Foo');
 goTo.marker('6');
-verify.quickInfoIs('Foo');
+verify.quickInfoIs('this: Foo');
 goTo.marker('7');
 verify.quickInfoIs('void');
 goTo.marker('8');
@@ -53,4 +56,9 @@ verify.quickInfoIs('void');
 goTo.marker('10');
 verify.quickInfoIs('(parameter) this: Restricted');
 goTo.marker('11');
-verify.quickInfoIs('Restricted');
+verify.quickInfoIs('this: Restricted');
+goTo.marker('12');
+
+verify.quickInfoIs('(parameter) this: {\n    n: number;\n}');
+goTo.marker('13');
+verify.quickInfoIs('this: {\n    n: number;\n}');

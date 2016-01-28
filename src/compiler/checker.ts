@@ -3309,9 +3309,8 @@ namespace ts {
                             return isIndependentVariableLikeDeclaration(<VariableLikeDeclaration>declaration);
                         case SyntaxKind.MethodDeclaration:
                         case SyntaxKind.MethodSignature:
-                            return false;
+                            return compilerOptions.strictThis ? false : isIndependentFunctionLikeDeclaration(<FunctionLikeDeclaration>declaration);
                         case SyntaxKind.Constructor:
-                            // TODO: I'm not sure whether constructors allow 'this'.
                             return isIndependentFunctionLikeDeclaration(<FunctionLikeDeclaration>declaration);
                     }
                 }
@@ -4914,9 +4913,14 @@ namespace ts {
         }
 
         function isContextSensitiveFunctionLikeDeclaration(node: FunctionLikeDeclaration) {
-            return !node.typeParameters &&
-                (!forEach(node.parameters, p => p.type)
-                || (node.kind !== SyntaxKind.ArrowFunction && (!node.parameters.length || (<Identifier>node.parameters[0].name).text !== "this")));
+            if (compilerOptions.strictThis) {
+                return !node.typeParameters &&
+                    (!forEach(node.parameters, p => p.type)
+                    || (node.kind !== SyntaxKind.ArrowFunction && (!node.parameters.length || (<Identifier>node.parameters[0].name).text !== "this")));
+            }
+            else {
+                return !node.typeParameters && node.parameters.length && !forEach(node.parameters, p => p.type);
+            }
         }
 
         function getTypeWithoutSignatures(type: Type): Type {
@@ -9011,7 +9015,7 @@ namespace ts {
                 context.failedTypeParameterIndex = undefined;
             }
 
-            const calleeNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
+            const calleeNode = node.kind === SyntaxKind.CallExpression && (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
             if (signature.thisType) {
                 const mapper = excludeCallee !== undefined ? identityMapper : inferenceMapper;
                 const calleeType: Type = calleeNode ? checkExpressionWithContextualType(calleeNode, signature.thisType, mapper) : voidType;
@@ -9101,7 +9105,7 @@ namespace ts {
                 // If the source is not of the form `x.f`, then sourceType = voidType
                 // If the target is voidType, then the check is skipped -- anything is compatible.
                 // If the the expression is a new expression, then the check is skipped.
-                const calleeNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
+                const calleeNode = node.kind === SyntaxKind.CallExpression && (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
                 const calleeType: Type = calleeNode ? checkExpressionWithContextualType(calleeNode, signature.thisType, undefined) : voidType;
                 const errorNode = reportErrors ? (calleeNode || node) : undefined;
                 if (!checkTypeRelatedTo(calleeType, getApparentType(signature.thisType), relation, errorNode, headMessage)) {
@@ -9483,7 +9487,7 @@ namespace ts {
             let excludeCallee: boolean;
             let excludeArgument: boolean[];
             if (!isDecorator) {
-                const calleeNode = (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
+                const calleeNode = node.kind === SyntaxKind.CallExpression && (<PropertyAccessExpression>(<CallExpression>node).expression).expression;
                 if (calleeNode && isContextSensitive(calleeNode)) {
                     excludeCallee = true;
                 }
@@ -15080,10 +15084,7 @@ namespace ts {
 
                 case SyntaxKind.ThisKeyword:
                 case SyntaxKind.SuperKeyword:
-                    if (isExpression(node)) {
-                        return undefined;
-                    }
-                    return getTypeFromTypeNode(<TypeNode>node).symbol;
+                    return isExpression(node) ? checkExpression(<Expression>node).symbol : getTypeFromTypeNode(<TypeNode>node).symbol;
 
                 case SyntaxKind.ThisType:
                     return getTypeFromTypeNode(<TypeNode>node).symbol;
