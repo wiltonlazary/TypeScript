@@ -1,0 +1,12 @@
+tests/cases/conformance/types/thisType/thisTypeInFuncTemp.ts(1,32): error TS1005: ',' expected.
+tests/cases/conformance/types/thisType/thisTypeInFuncTemp.ts(1,39): error TS1003: Identifier expected.
+
+
+==== tests/cases/conformance/types/thisType/thisTypeInFuncTemp.ts (2 errors) ====
+    function f(this: { y: number } = { y: 1 }, x: number = 2) {
+                                   ~
+!!! error TS1005: ',' expected.
+                                          ~
+!!! error TS1003: Identifier expected.
+        return x + this.y;
+    }
