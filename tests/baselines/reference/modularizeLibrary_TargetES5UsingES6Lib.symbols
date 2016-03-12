@@ -9,7 +9,7 @@ function f(x: number, y: number, z: number) {
 
     return Array.from(arguments);
 >Array.from : Symbol(ArrayConstructor.from, Decl(lib.es6.iterable.d.ts, --, --), Decl(lib.es6.iterable.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --))
->Array : Symbol(Array, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.iterable.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
+>Array : Symbol(Array, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.iterable.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --), Decl(lib.d.ts, --, --), Decl(lib.d.ts, --, --))
 >from : Symbol(ArrayConstructor.from, Decl(lib.es6.iterable.d.ts, --, --), Decl(lib.es6.iterable.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --))
 >arguments : Symbol(arguments)
 }
@@ -80,7 +80,7 @@ function* gen2() {
 // Using ES6 math
 Math.sign(1);
 >Math.sign : Symbol(Math.sign, Decl(lib.es6.math.d.ts, --, --))
->Math : Symbol(Math, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.math.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
+>Math : Symbol(Math, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.math.d.ts, --, --), Decl(lib.d.ts, --, --), Decl(lib.d.ts, --, --))
 >sign : Symbol(Math.sign, Decl(lib.es6.math.d.ts, --, --))
 
 // Using ES6 object
@@ -100,9 +100,9 @@ var o = {
     }
 };
 o.hasOwnProperty(Symbol.hasInstance);
->o.hasOwnProperty : Symbol(Object.hasOwnProperty, Decl(lib.es6.object.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
+>o.hasOwnProperty : Symbol(Object.hasOwnProperty, Decl(lib.es6.object.d.ts, --, --), Decl(lib.d.ts, --, --))
 >o : Symbol(o, Decl(modularizeLibrary_TargetES5UsingES6Lib.ts, 39, 3))
->hasOwnProperty : Symbol(Object.hasOwnProperty, Decl(lib.es6.object.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
+>hasOwnProperty : Symbol(Object.hasOwnProperty, Decl(lib.es6.object.d.ts, --, --), Decl(lib.d.ts, --, --))
 >Symbol.hasInstance : Symbol(SymbolConstructor.hasInstance, Decl(lib.es6.symbol.wellknown.d.ts, --, --))
 >Symbol : Symbol(Symbol, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.symbol.d.ts, --, --), Decl(lib.es6.symbol.d.ts, --, --))
 >hasInstance : Symbol(SymbolConstructor.hasInstance, Decl(lib.es6.symbol.wellknown.d.ts, --, --))
@@ -148,7 +148,7 @@ Reflect.isExtensible({});
 // Using Es6 regexp
 var reg = new RegExp("/s");
 >reg : Symbol(reg, Decl(modularizeLibrary_TargetES5UsingES6Lib.ts, 65, 3))
->RegExp : Symbol(RegExp, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.regexp.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
+>RegExp : Symbol(RegExp, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.regexp.d.ts, --, --), Decl(lib.d.ts, --, --), Decl(lib.d.ts, --, --))
 
 reg.flags;
 >reg.flags : Symbol(RegExp.flags, Decl(lib.es6.regexp.d.ts, --, --))

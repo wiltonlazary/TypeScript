@@ -8,7 +8,7 @@ function f(x: number, y: number, z: number) {
 
     return Array.from(arguments);
 >Array.from : Symbol(ArrayConstructor.from, Decl(lib.es6.array.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --))
->Array : Symbol(Array, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
+>Array : Symbol(Array, Decl(lib.es6.symbol.wellknown.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --), Decl(lib.d.ts, --, --), Decl(lib.d.ts, --, --))
 >from : Symbol(ArrayConstructor.from, Decl(lib.es6.array.d.ts, --, --), Decl(lib.es6.array.d.ts, --, --))
 >arguments : Symbol(arguments)
 }

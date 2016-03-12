@@ -55,7 +55,7 @@ var x3 = f1()
 >then : Symbol(Promise.then, Decl(lib.es6.promise.d.ts, --, --), Decl(lib.es6.promise.d.ts, --, --))
 >f2 : Symbol(f2, Decl(promiseVoidErrorCallback.ts, 14, 1))
 >e : Symbol(e, Decl(promiseVoidErrorCallback.ts, 21, 15))
->Error : Symbol(Error, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
+>Error : Symbol(Error, Decl(lib.d.ts, --, --), Decl(lib.d.ts, --, --))
 
     throw e;
 >e : Symbol(e, Decl(promiseVoidErrorCallback.ts, 21, 15))
