@@ -2236,7 +2236,6 @@ namespace ts {
         function tryConsumeImport(): boolean {
             let token = scanner.getToken();
             if (token === SyntaxKind.ImportKeyword) {
-                markAsExternalModuleIfTopLevel();
 
                 token = nextToken();
                 if (token === SyntaxKind.StringLiteral) {

@@ -340,7 +340,44 @@ describe('PreProcessFile:', function () {
                 isLibFile: false
             })
         });
-        it ("correctly handles augmentations in ambient external modules", () => {
+        it("correctly handles augmentations in external modules - 5", () => {
+            test(`
+            declare module "../Observable" {
+                interface I {}
+            }
+            namespace N {}
+            export import IN = N;
+            `, 
+            /*readImportFile*/ true,
+            /*detectJavaScriptImports*/ false,
+            {
+                referencedFiles: [],
+                importedFiles: [
+                    { "fileName": "../Observable", "pos": 28, "end": 41 }
+                ],
+                ambientExternalModules: undefined,
+                isLibFile: false
+            })
+        });
+        it("correctly handles augmentations in external modules - 6", () => {
+            test(`
+            declare module "../Observable" {
+                interface I {}
+            }
+            export let x = 1;
+            `, 
+            /*readImportFile*/ true,
+            /*detectJavaScriptImports*/ false,
+            {
+                referencedFiles: [],
+                importedFiles: [
+                    { "fileName": "../Observable", "pos": 28, "end": 41 }
+                ],
+                ambientExternalModules: undefined,
+                isLibFile: false
+            })
+        });
+        it ("correctly handles augmentations in ambient external modules - 1", () => {
             test(`
             declare module "m1" {
                 export * from "m2";
@@ -361,6 +398,29 @@ describe('PreProcessFile:', function () {
                 isLibFile: false
             });
         });
+        it ("correctly handles augmentations in ambient external modules - 2", () => {
+            test(`
+            namespace M { var x; }
+            import IM = M;
+            declare module "m1" {
+                export * from "m2";
+                declare module "augmentation" {
+                    interface I {}
+                }
+            }
+            `, 
+            /*readImportFile*/ true,
+            /*detectJavaScriptImports*/ false,
+            {
+                referencedFiles: [],
+                importedFiles: [
+                    { "fileName": "m2", "pos": 127, "end": 129 },
+                    { "fileName": "augmentation", "pos": 164, "end": 176 }
+                ],
+                ambientExternalModules: ["m1"],
+                isLibFile: false
+            });
+        });        
     });
 });
 
