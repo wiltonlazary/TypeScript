@@ -1,6 +1,10 @@
 ﻿/// <reference path="..\..\..\..\src\harness\external\mocha.d.ts" />
 /// <reference path="..\..\..\..\src\harness\harnessLanguageService.ts" />
 
+declare namespace chai.assert {
+    function deepEqual(actual: any, expected: any): void;
+}
+
 describe('PreProcessFile:', function () {
     function test(sourceText: string, readImportFile: boolean, detectJavaScriptImports: boolean, expectedPreProcess: ts.PreProcessedFileInfo): void {
         var resultPreProcess = ts.preProcessFile(sourceText, readImportFile, detectJavaScriptImports);
@@ -15,34 +19,30 @@ describe('PreProcessFile:', function () {
 
         assert.equal(resultIsLibFile, expectedIsLibFile, "Pre-processed file has different value for isLibFile. Expected: " + expectedPreProcess + ". Actual: " + resultIsLibFile);
 
-        assert.equal(resultImportedFiles.length, expectedImportedFiles.length,
-            `Array's length of imported files does not match expected. Expected files: ${JSON.stringify(expectedImportedFiles)}, actual files: ${JSON.stringify(resultImportedFiles)}`);
+        checkFileReferenceList("Imported files", expectedImportedFiles, resultImportedFiles);
+        checkFileReferenceList("Referenced files", expectedReferencedFiles, resultReferencedFiles);
 
-        assert.equal(resultReferencedFiles.length, expectedReferencedFiles.length,
-            "Array's length of referenced files does not match expected. Expected: " + expectedReferencedFiles.length + ". Actual: " + resultReferencedFiles.length);
+        assert.deepEqual(resultPreProcess.ambientExternalModules, expectedPreProcess.ambientExternalModules);
+    }
 
-        for (var i = 0; i < expectedImportedFiles.length; ++i) {
-            var resultImportedFile = resultImportedFiles[i];
-            var expectedImportedFile = expectedImportedFiles[i];
-
-            assert.equal(resultImportedFile.fileName, expectedImportedFile.fileName, "Imported file path does not match expected. Expected: " + expectedImportedFile.fileName + ". Actual: " + resultImportedFile.fileName + ".");
-
-            assert.equal(resultImportedFile.pos, expectedImportedFile.pos, "Imported file position does not match expected. Expected: " + expectedImportedFile.pos + ". Actual: " + resultImportedFile.pos + ".");
-
-            assert.equal(resultImportedFile.end, expectedImportedFile.end, "Imported file length does not match expected. Expected: " + expectedImportedFile.end + ". Actual: " + resultImportedFile.end + ".");
+    function checkFileReferenceList(kind: string, expected: ts.FileReference[], actual: ts.FileReference[]) {
+        if (expected === actual) {
+            return;
         }
+        if (!expected) {
+            assert.isTrue(false, `Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+        }
+        assert.equal(actual.length, expected.length, `[${kind}] Actual array's length does not match expected length. Expected files: ${JSON.stringify(expected)}, actual files: ${JSON.stringify(actual)}`);
 
-        for (var i = 0; i < expectedReferencedFiles.length; ++i) {
-            var resultReferencedFile = resultReferencedFiles[i];
-            var expectedReferencedFile = expectedReferencedFiles[i];
-
-            assert.equal(resultReferencedFile.fileName, expectedReferencedFile.fileName, "Referenced file path does not match expected. Expected: " + expectedReferencedFile.fileName + ". Actual: " + resultReferencedFile.fileName + ".");
-
-            assert.equal(resultReferencedFile.pos, expectedReferencedFile.pos, "Referenced file position does not match expected. Expected: " + expectedReferencedFile.pos + ". Actual: " + resultReferencedFile.pos + ".");
-
-            assert.equal(resultReferencedFile.end, expectedReferencedFile.end, "Referenced file length does not match expected. Expected: " + expectedReferencedFile.end + ". Actual: " + resultReferencedFile.end + ".");
+        for (var i = 0; i < expected.length; ++i) {
+            var actualReference = actual[i];
+            var expectedReference = expected[i];
+            assert.equal(actualReference.fileName, expectedReference.fileName, `[${kind}] actual file path does not match expected. Expected: "${expectedReference.fileName}". Actual: "${actualReference.fileName}".`);
+            assert.equal(actualReference.pos, expectedReference.pos, `[${kind}] actual file start position does not match expected. Expected: "${expectedReference.pos}". Actual: "${actualReference.pos}".`);
+            assert.equal(actualReference.end, expectedReference.end, `[${kind}] actual file end pos does not match expected. Expected: "${expectedReference.end}". Actual: "${actualReference.end}".`);
         }
     }
+    
     describe("Test preProcessFiles,", function () {
         it("Correctly return referenced files from triple slash", function () {
             test("///<reference path = \"refFile1.ts\" />" + "\n" + "///<reference path =\"refFile2.ts\"/>" + "\n" + "///<reference path=\"refFile3.ts\" />" + "\n" + "///<reference path= \"..\\refFile4d.ts\" />", 
@@ -183,7 +183,7 @@ describe('PreProcessFile:', function () {
                function foo() {
                }
                `, 
-                /* readImports */ false,
+                /* readImports */ true,
                 /* detectJavaScriptImports */ false,
  
                {
@@ -339,6 +339,27 @@ describe('PreProcessFile:', function () {
                 ambientExternalModules: undefined,
                 isLibFile: false
             })
+        });
+        it ("correctly handles augmentations in ambient external modules", () => {
+            test(`
+            declare module "m1" {
+                export * from "m2";
+                declare module "augmentation" {
+                    interface I {}
+                }
+            }
+            `, 
+            /*readImportFile*/ true,
+            /*detectJavaScriptImports*/ false,
+            {
+                referencedFiles: [],
+                importedFiles: [
+                    { "fileName": "m2", "pos": 65, "end": 67 },
+                    { "fileName": "augmentation", "pos": 102, "end": 114 }
+                ],
+                ambientExternalModules: ["m1"],
+                isLibFile: false
+            });
         });
     });
 });

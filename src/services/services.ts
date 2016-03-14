@@ -2477,7 +2477,7 @@ namespace ts {
                     importedFiles.push(decl.ref);
                 }
             }
-            return { referencedFiles, importedFiles, isLibFile: isNoDefaultLib, ambientExternalModules: emptyArray };
+            return { referencedFiles, importedFiles, isLibFile: isNoDefaultLib, ambientExternalModules: undefined };
         }
         else {
             // for global scripts ambient modules still can have augmentations - look for ambient modules with depth > 0
