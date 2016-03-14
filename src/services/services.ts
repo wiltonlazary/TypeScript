@@ -2165,7 +2165,7 @@ namespace ts {
             }
             return token;
         }
-        
+
         function processTripleSlashDirectives(): void {
             const commentRanges = getLeadingCommentRanges(sourceText, 0);
             forEach(commentRanges, commentRange => {
@@ -2467,10 +2467,10 @@ namespace ts {
             if (ambientExternalModules) {
                 // move all detected ambient modules to imported files since they need to be resolved
                 for (const decl of ambientExternalModules) {
-                    importedFiles.push(decl.ref)
+                    importedFiles.push(decl.ref);
                 }
             }
-            return { referencedFiles, importedFiles, isLibFile: isNoDefaultLib, ambientExternalModules: emptyArray } 
+            return { referencedFiles, importedFiles, isLibFile: isNoDefaultLib, ambientExternalModules: emptyArray };
         }
         else {
             // for global scripts ambient modules still can have augmentations - look for ambient modules with depth > 0
