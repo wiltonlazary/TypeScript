@@ -16,7 +16,7 @@ describe('PreProcessFile:', function () {
         assert.equal(resultIsLibFile, expectedIsLibFile, "Pre-processed file has different value for isLibFile. Expected: " + expectedPreProcess + ". Actual: " + resultIsLibFile);
 
         assert.equal(resultImportedFiles.length, expectedImportedFiles.length,
-            "Array's length of imported files does not match expected. Expected: " + expectedImportedFiles.length + ". Actual: " + resultImportedFiles.length);
+            `Array's length of imported files does not match expected. Expected files: ${JSON.stringify(expectedImportedFiles)}, actual files: ${JSON.stringify(resultImportedFiles)}`);
 
         assert.equal(resultReferencedFiles.length, expectedReferencedFiles.length,
             "Array's length of referenced files does not match expected. Expected: " + expectedReferencedFiles.length + ". Actual: " + resultReferencedFiles.length);
@@ -261,6 +261,84 @@ describe('PreProcessFile:', function () {
                     ambientExternalModules: undefined,
                     isLibFile: false
                 })
+        });
+        it("correctly handles augmentations in external modules - 1", () => {
+            test(`
+            declare module "../Observable" {
+                interface I {}
+            }
+            
+            export {}
+            `, 
+            /*readImportFile*/ true,
+            /*detectJavaScriptImports*/ false,
+            {
+                referencedFiles: [],
+                importedFiles: [
+                    { "fileName": "../Observable", "pos": 28, "end": 41 }
+                ],
+                ambientExternalModules: undefined,
+                isLibFile: false
+            })
+        });
+        it("correctly handles augmentations in external modules - 2", () => {
+            test(`
+            declare module "../Observable" {
+                interface I {}
+            }
+            
+            import * as x from "m";
+            `, 
+            /*readImportFile*/ true,
+            /*detectJavaScriptImports*/ false,
+            {
+                referencedFiles: [],
+                importedFiles: [
+                    { "fileName": "m", "pos": 135, "end": 136 },
+                    { "fileName": "../Observable", "pos": 28, "end": 41 }
+                ],
+                ambientExternalModules: undefined,
+                isLibFile: false
+            })
+        });
+        it("correctly handles augmentations in external modules - 3", () => {
+            test(`
+            declare module "../Observable" {
+                interface I {}
+            }
+            
+            import m = require("m");
+            `, 
+            /*readImportFile*/ true,
+            /*detectJavaScriptImports*/ false,
+            {
+                referencedFiles: [],
+                importedFiles: [
+                    { "fileName": "m", "pos": 135, "end": 136 },
+                    { "fileName": "../Observable", "pos": 28, "end": 41 }
+                ],
+                ambientExternalModules: undefined,
+                isLibFile: false
+            })
+        });
+        it("correctly handles augmentations in external modules - 4", () => {
+            test(`
+            declare module "../Observable" {
+                interface I {}
+            }
+            namespace N {}
+            export = N;
+            `, 
+            /*readImportFile*/ true,
+            /*detectJavaScriptImports*/ false,
+            {
+                referencedFiles: [],
+                importedFiles: [
+                    { "fileName": "../Observable", "pos": 28, "end": 41 }
+                ],
+                ambientExternalModules: undefined,
+                isLibFile: false
+            })
         });
     });
 });

@@ -2160,7 +2160,7 @@ namespace ts {
             if (token === SyntaxKind.OpenBraceToken) {
                 braceNesting++;
             }
-            else if (token === SyntaxKind.CloseBracketToken) {
+            else if (token === SyntaxKind.CloseBraceToken) {
                 braceNesting--;
             }
             return token;
@@ -2201,7 +2201,11 @@ namespace ts {
         function recordModuleName() {
             importedFiles.push(getFileReference());
 
-            if (braceNesting === 0) {
+            markAsExternalModule(/*expectedNesting*/ 0);
+        }
+
+        function markAsExternalModule(expectedNesting: number) {
+            if (braceNesting === expectedNesting) {
                 externalModule = true;
             }
         }
@@ -2314,6 +2318,9 @@ namespace ts {
             if (token === SyntaxKind.ExportKeyword) {
                 token = nextToken();
                 if (token === SyntaxKind.OpenBraceToken) {
+                    // treat file that contains top level `export {` as external module;
+                    markAsExternalModule(/*expectedNesting*/ 1);
+
                     token = nextToken();
                     // consume "{ a as B, c, d as D}" clauses
                     // make sure it stops on EOF
@@ -2353,6 +2360,10 @@ namespace ts {
                             }
                         }
                     }
+                }
+                else if (token === SyntaxKind.EqualsToken) {
+                    // assume file with top level `export =` is an external module
+                    markAsExternalModule(/*expectedNesting*/ 0);
                 }
 
                 return true;
