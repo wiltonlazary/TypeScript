@@ -2201,11 +2201,11 @@ namespace ts {
         function recordModuleName() {
             importedFiles.push(getFileReference());
 
-            markAsExternalModule(/*expectedNesting*/ 0);
+            markAsExternalModuleIfTopLevel();
         }
 
-        function markAsExternalModule(expectedNesting: number) {
-            if (braceNesting === expectedNesting) {
+        function markAsExternalModuleIfTopLevel() {
+            if (braceNesting === 0) {
                 externalModule = true;
             }
         }
@@ -2236,6 +2236,8 @@ namespace ts {
         function tryConsumeImport(): boolean {
             let token = scanner.getToken();
             if (token === SyntaxKind.ImportKeyword) {
+                markAsExternalModuleIfTopLevel();
+
                 token = nextToken();
                 if (token === SyntaxKind.StringLiteral) {
                     // import "mod";
@@ -2316,11 +2318,9 @@ namespace ts {
         function tryConsumeExport(): boolean {
             let token = scanner.getToken();
             if (token === SyntaxKind.ExportKeyword) {
+                markAsExternalModuleIfTopLevel();
                 token = nextToken();
                 if (token === SyntaxKind.OpenBraceToken) {
-                    // treat file that contains top level `export {` as external module;
-                    markAsExternalModule(/*expectedNesting*/ 1);
-
                     token = nextToken();
                     // consume "{ a as B, c, d as D}" clauses
                     // make sure it stops on EOF
@@ -2360,10 +2360,6 @@ namespace ts {
                             }
                         }
                     }
-                }
-                else if (token === SyntaxKind.EqualsToken) {
-                    // assume file with top level `export =` is an external module
-                    markAsExternalModule(/*expectedNesting*/ 0);
                 }
 
                 return true;
