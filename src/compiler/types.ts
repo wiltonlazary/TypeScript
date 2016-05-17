@@ -407,8 +407,10 @@ namespace ts {
         HasAggregatedChildData = 1 << 29,  // If we've computed data from children and cached it in this node
         HasJsxSpreadAttribute = 1 << 30,
 
-        Modifier = Export | Ambient | Public | Private | Protected | Static | Abstract | Default | Async,
+        Modifier = Export | Ambient | Public | Private | Protected | Static | Abstract | Default | Async | Readonly,
         AccessibilityModifier = Public | Private | Protected,
+        // Accessibility modifiers and 'readonly' can be attached to a parameter in a constructor to make it a property.
+        ParameterPropertyModifier = AccessibilityModifier | Readonly,
         BlockScoped = Let | Const,
 
         ReachabilityCheckFlags = HasImplicitReturn | HasExplicitReturn,
@@ -1515,17 +1517,22 @@ namespace ts {
         isBracketed: boolean;
     }
 
-    export const enum FlowKind {
-        Unreachable,
-        Start,
-        Label,
-        LoopLabel,
-        Assignment,
-        Condition
+    export const enum FlowFlags {
+        Unreachable    = 1 << 0,  // Unreachable code
+        Start          = 1 << 1,  // Start of flow graph
+        BranchLabel    = 1 << 2,  // Non-looping junction
+        LoopLabel      = 1 << 3,  // Looping junction
+        Assignment     = 1 << 4,  // Assignment
+        TrueCondition  = 1 << 5,  // Condition known to be true
+        FalseCondition = 1 << 6,  // Condition known to be false
+        Referenced     = 1 << 7,  // Referenced as antecedent once
+        Shared         = 1 << 8,  // Referenced as antecedent more than once
+        Label = BranchLabel | LoopLabel,
+        Condition = TrueCondition | FalseCondition
     }
 
     export interface FlowNode {
-        kind: FlowKind;  // Node kind
+        flags: FlowFlags;
         id?: number;     // Node id used by flow type cache in checker
     }
 
@@ -1545,7 +1552,6 @@ namespace ts {
     // node's location in the control flow.
     export interface FlowCondition extends FlowNode {
         expression: Expression;
-        assumeTrue: boolean;
         antecedent: FlowNode;
     }
 
@@ -1623,6 +1629,7 @@ namespace ts {
     export interface ScriptReferenceHost {
         getCompilerOptions(): CompilerOptions;
         getSourceFile(fileName: string): SourceFile;
+        getSourceFileByPath(path: Path): SourceFile;
         getCurrentDirectory(): string;
     }
 
@@ -2592,6 +2599,7 @@ namespace ts {
         options: CompilerOptions;
         typingOptions?: TypingOptions;
         fileNames: string[];
+        raw?: any;
         errors: Diagnostic[];
     }
 
@@ -2775,6 +2783,7 @@ namespace ts {
         readFile(fileName: string): string;
         trace?(s: string): void;
         directoryExists?(directoryName: string): boolean;
+        realpath?(path: string): string;
     }
 
     export interface ResolvedModule {
@@ -2807,6 +2816,7 @@ namespace ts {
 
     export interface CompilerHost extends ModuleResolutionHost {
         getSourceFile(fileName: string, languageVersion: ScriptTarget, onError?: (message: string) => void): SourceFile;
+        getSourceFileByPath?(fileName: string, path: Path, languageVersion: ScriptTarget, onError?: (message: string) => void): SourceFile;
         getCancellationToken?(): CancellationToken;
         getDefaultLibFileName(options: CompilerOptions): string;
         getDefaultLibLocation?(): string;

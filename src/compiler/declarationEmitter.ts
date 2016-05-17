@@ -1051,7 +1051,7 @@ namespace ts {
             function emitParameterProperties(constructorDeclaration: ConstructorDeclaration) {
                 if (constructorDeclaration) {
                     forEach(constructorDeclaration.parameters, param => {
-                        if (param.flags & NodeFlags.AccessibilityModifier) {
+                        if (param.flags & NodeFlags.ParameterPropertyModifier) {
                             emitPropertyDeclaration(param);
                         }
                     });
@@ -1753,7 +1753,7 @@ namespace ts {
         if (!emitSkipped) {
             const declarationOutput = emitDeclarationResult.referencesOutput
                 + getDeclarationOutput(emitDeclarationResult.synchronousDeclarationOutput, emitDeclarationResult.moduleElementDeclarationEmitInfo);
-            writeFile(host, emitterDiagnostics, declarationFilePath, declarationOutput, host.getCompilerOptions().emitBOM);
+            writeFile(host, emitterDiagnostics, declarationFilePath, declarationOutput, host.getCompilerOptions().emitBOM, sourceFiles);
         }
         return emitSkipped;
 
