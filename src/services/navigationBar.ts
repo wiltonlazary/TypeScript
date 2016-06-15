@@ -188,7 +188,10 @@ namespace ts.NavigationBar {
                     case SyntaxKind.ModuleDeclaration:
                         let moduleDeclaration = <ModuleDeclaration>node;
                         topLevelNodes.push(node);
-                        addTopLevelNodes((<Block>getInnermostModule(moduleDeclaration).body).statements, topLevelNodes);
+                        const inner = getInnermostModule(moduleDeclaration);
+                        if (inner.body) {
+                            addTopLevelNodes((<Block>inner.body).statements, topLevelNodes);
+                        }
                         break;
 
                     case SyntaxKind.FunctionDeclaration:
@@ -453,7 +456,8 @@ namespace ts.NavigationBar {
             function createModuleItem(node: ModuleDeclaration): NavigationBarItem {
                 const moduleName = getModuleName(node);
 
-                const childItems = getItemsWorker(getChildNodes((<Block>getInnermostModule(node).body).statements), createChildItem);
+                const body = <Block>getInnermostModule(node).body;
+                const childItems = body ? getItemsWorker(getChildNodes(body.statements), createChildItem) : [];
 
                 return getNavigationBarItem(moduleName,
                     ts.ScriptElementKind.moduleElement,
@@ -611,7 +615,7 @@ namespace ts.NavigationBar {
         }
 
         function getInnermostModule(node: ModuleDeclaration): ModuleDeclaration {
-            while (node.body.kind === SyntaxKind.ModuleDeclaration) {
+            while (node.body && node.body.kind === SyntaxKind.ModuleDeclaration) {
                 node = <ModuleDeclaration>node.body;
             }
 
@@ -650,6 +654,12 @@ namespace ts.NavigationBar {
 
             if (newItem) {
                 topItem.childItems.push(newItem);
+            }
+
+            if (node.jsDocComments && node.jsDocComments.length > 0) {
+                for (const jsDocComment of node.jsDocComments) {
+                    visitNode(jsDocComment);
+                }
             }
 
             // Add a level if traversing into a container
@@ -731,6 +741,27 @@ namespace ts.NavigationBar {
                     }
                     const declName = declarationNameToString(decl.name);
                     return getNavBarItem(declName, ScriptElementKind.constElement, [getNodeSpan(node)]);
+                case SyntaxKind.JSDocTypedefTag:
+                    if ((<JSDocTypedefTag>node).name) {
+                        return getNavBarItem(
+                            (<JSDocTypedefTag>node).name.text,
+                            ScriptElementKind.typeElement,
+                            [getNodeSpan(node)]);
+                    }
+                    else {
+                        const parentNode = node.parent && node.parent.parent;
+                        if (parentNode && parentNode.kind === SyntaxKind.VariableStatement) {
+                            if ((<VariableStatement>parentNode).declarationList.declarations.length > 0) {
+                                const nameIdentifier = (<VariableStatement>parentNode).declarationList.declarations[0].name;
+                                if (nameIdentifier.kind === SyntaxKind.Identifier) {
+                                    return getNavBarItem(
+                                        (<Identifier>nameIdentifier).text,
+                                        ScriptElementKind.typeElement,
+                                        [getNodeSpan(node)]);
+                                }
+                            }
+                        }
+                    }
                 default:
                     return undefined;
             }
@@ -801,7 +832,7 @@ namespace ts.NavigationBar {
         }
 
         function getNodeSpan(node: Node) {
-            return node.kind === SyntaxKind.SourceFile
+           return node.kind === SyntaxKind.SourceFile
                 ? createTextSpanFromBounds(node.getFullStart(), node.getEnd())
                 : createTextSpanFromBounds(node.getStart(), node.getEnd());
         }

@@ -53,7 +53,8 @@ namespace ts {
             return state;
         }
         else if (node.kind === SyntaxKind.ModuleDeclaration) {
-            return getModuleInstanceState((<ModuleDeclaration>node).body);
+            const body = (<ModuleDeclaration>node).body;
+            return body ? getModuleInstanceState(body) : ModuleInstanceState.Instantiated;
         }
         else {
             return ModuleInstanceState.Instantiated;
@@ -263,6 +264,18 @@ namespace ts {
                     let functionType = <JSDocFunctionType>node.parent;
                     let index = indexOf(functionType.parameters, node);
                     return "p" + index;
+                case SyntaxKind.JSDocTypedefTag:
+                    const parentNode = node.parent && node.parent.parent;
+                    let nameFromParentNode: string;
+                    if (parentNode && parentNode.kind === SyntaxKind.VariableStatement) {
+                        if ((<VariableStatement>parentNode).declarationList.declarations.length > 0) {
+                            const nameIdentifier = (<VariableStatement>parentNode).declarationList.declarations[0].name;
+                            if (nameIdentifier.kind === SyntaxKind.Identifier) {
+                                nameFromParentNode = (<Identifier>nameIdentifier).text;
+                            }
+                        }
+                    }
+                    return nameFromParentNode;
             }
         }
 
@@ -402,6 +415,7 @@ namespace ts {
             // these saved values.
             const saveContainer = container;
             const savedBlockScopeContainer = blockScopeContainer;
+
             // Depending on what kind of node this is, we may have to adjust the current container
             // and block-container.   If the current node is a container, then it is automatically
             // considered the current block-container as well.  Also, for containers that we know
@@ -491,8 +505,13 @@ namespace ts {
         }
 
         function bindChildren(node: Node): void {
-            if (node.flags & NodeFlags.JavaScriptFile && node.jsDocComment) {
-                bind(node.jsDocComment);
+            // Binding of JsDocComment should be done before the current block scope container changes.
+            // because the scope of JsDocComment should not be affected by whether the current node is a
+            // container or not.
+            if (isInJavaScriptFile(node) && node.jsDocComments) {
+                for (const jsDocComment of node.jsDocComments) {
+                    bind(jsDocComment);
+                }
             }
             if (checkUnreachable(node)) {
                 forEachChild(node, bind);
@@ -591,10 +610,11 @@ namespace ts {
                 case SyntaxKind.ExclamationEqualsToken:
                 case SyntaxKind.EqualsEqualsEqualsToken:
                 case SyntaxKind.ExclamationEqualsEqualsToken:
-                    if (isNarrowingExpression(expr.left) && (expr.right.kind === SyntaxKind.NullKeyword || expr.right.kind === SyntaxKind.Identifier)) {
+                    if ((isNarrowingExpression(expr.left) && (expr.right.kind === SyntaxKind.NullKeyword || expr.right.kind === SyntaxKind.Identifier)) ||
+                        (isNarrowingExpression(expr.right) && (expr.left.kind === SyntaxKind.NullKeyword || expr.left.kind === SyntaxKind.Identifier))) {
                         return true;
                     }
-                    if (expr.left.kind === SyntaxKind.TypeOfExpression && isNarrowingExpression((<TypeOfExpression>expr.left).expression) && expr.right.kind === SyntaxKind.StringLiteral) {
+                    if (isTypeOfNarrowingBinaryExpression(expr)) {
                         return true;
                     }
                     return false;
@@ -604,6 +624,20 @@ namespace ts {
                     return isNarrowingExpression(expr.right);
             }
             return false;
+        }
+
+        function isTypeOfNarrowingBinaryExpression(expr: BinaryExpression) {
+            let typeOf: Expression;
+            if (expr.left.kind === SyntaxKind.StringLiteral) {
+                typeOf = expr.right;
+            }
+            else if (expr.right.kind === SyntaxKind.StringLiteral) {
+                typeOf = expr.left;
+            }
+            else {
+                typeOf = undefined;
+            }
+            return typeOf && typeOf.kind === SyntaxKind.TypeOfExpression && isNarrowingExpression((<TypeOfExpression>typeOf).expression);
         }
 
         function createBranchLabel(): FlowLabel {
@@ -1090,6 +1124,7 @@ namespace ts {
                 case SyntaxKind.EnumDeclaration:
                 case SyntaxKind.ObjectLiteralExpression:
                 case SyntaxKind.TypeLiteral:
+                case SyntaxKind.JSDocTypeLiteral:
                 case SyntaxKind.JSDocRecordType:
                     return ContainerFlags.IsContainer;
 
@@ -1123,6 +1158,8 @@ namespace ts {
 
                 case SyntaxKind.ModuleBlock:
                     return ContainerFlags.IsControlFlowContainer;
+                case SyntaxKind.PropertyDeclaration:
+                    return (<PropertyDeclaration>node).initializer ? ContainerFlags.IsControlFlowContainer : 0;
 
                 case SyntaxKind.CatchClause:
                 case SyntaxKind.ForStatement:
@@ -1162,9 +1199,9 @@ namespace ts {
             lastContainer = next;
         }
 
-        function declareSymbolAndAddToSymbolTable(node: Declaration, symbolFlags: SymbolFlags, symbolExcludes: SymbolFlags): void {
+        function declareSymbolAndAddToSymbolTable(node: Declaration, symbolFlags: SymbolFlags, symbolExcludes: SymbolFlags): Symbol {
             // Just call this directly so that the return type of this function stays "void".
-            declareSymbolAndAddToSymbolTableWorker(node, symbolFlags, symbolExcludes);
+            return declareSymbolAndAddToSymbolTableWorker(node, symbolFlags, symbolExcludes);
         }
 
         function declareSymbolAndAddToSymbolTableWorker(node: Declaration, symbolFlags: SymbolFlags, symbolExcludes: SymbolFlags): Symbol {
@@ -1190,6 +1227,7 @@ namespace ts {
                 case SyntaxKind.ObjectLiteralExpression:
                 case SyntaxKind.InterfaceDeclaration:
                 case SyntaxKind.JSDocRecordType:
+                case SyntaxKind.JSDocTypeLiteral:
                     // Interface/Object-types always have their children added to the 'members' of
                     // their container. They are only accessible through an instance of their
                     // container, and are never in scope otherwise (even inside the body of the
@@ -1218,7 +1256,7 @@ namespace ts {
                     // their container in the tree.  To accomplish this, we simply add their declared
                     // symbol to the 'locals' of the container.  These symbols can then be found as
                     // the type checker walks up the containers, checking them for matching names.
-                    return declareSymbol(container.locals, undefined, node, symbolFlags, symbolExcludes);
+                    return declareSymbol(container.locals, /*parent*/ undefined, node, symbolFlags, symbolExcludes);
             }
         }
 
@@ -1236,7 +1274,7 @@ namespace ts {
 
         function hasExportDeclarations(node: ModuleDeclaration | SourceFile): boolean {
             const body = node.kind === SyntaxKind.SourceFile ? node : (<ModuleDeclaration>node).body;
-            if (body.kind === SyntaxKind.SourceFile || body.kind === SyntaxKind.ModuleBlock) {
+            if (body && (body.kind === SyntaxKind.SourceFile || body.kind === SyntaxKind.ModuleBlock)) {
                 for (const stat of (<Block>body).statements) {
                     if (stat.kind === SyntaxKind.ExportDeclaration || stat.kind === SyntaxKind.ExportAssignment) {
                         return true;
@@ -1267,7 +1305,22 @@ namespace ts {
                     declareSymbolAndAddToSymbolTable(node, SymbolFlags.NamespaceModule, SymbolFlags.NamespaceModuleExcludes);
                 }
                 else {
-                    declareSymbolAndAddToSymbolTable(node, SymbolFlags.ValueModule, SymbolFlags.ValueModuleExcludes);
+                    let pattern: Pattern | undefined;
+                    if (node.name.kind === SyntaxKind.StringLiteral) {
+                        const text = (<StringLiteral>node.name).text;
+                        if (hasZeroOrOneAsteriskCharacter(text)) {
+                            pattern = tryParsePattern(text);
+                        }
+                        else {
+                            errorOnFirstToken(node.name, Diagnostics.Pattern_0_can_have_at_most_one_Asterisk_character, text);
+                        }
+                    }
+
+                    const symbol = declareSymbolAndAddToSymbolTable(node, SymbolFlags.ValueModule, SymbolFlags.ValueModuleExcludes);
+
+                    if (pattern) {
+                        (file.patternAmbientModules || (file.patternAmbientModules = [])).push({ pattern, symbol });
+                    }
                 }
             }
             else {
@@ -1679,6 +1732,8 @@ namespace ts {
                 case SyntaxKind.PropertySignature:
                 case SyntaxKind.JSDocRecordMember:
                     return bindPropertyOrMethodOrAccessor(<Declaration>node, SymbolFlags.Property | ((<PropertyDeclaration>node).questionToken ? SymbolFlags.Optional : SymbolFlags.None), SymbolFlags.PropertyExcludes);
+                case SyntaxKind.JSDocPropertyTag:
+                    return bindJSDocProperty(<JSDocPropertyTag>node);
                 case SyntaxKind.PropertyAssignment:
                 case SyntaxKind.ShorthandPropertyAssignment:
                     return bindPropertyOrMethodOrAccessor(<Declaration>node, SymbolFlags.Property, SymbolFlags.PropertyExcludes);
@@ -1714,6 +1769,7 @@ namespace ts {
                 case SyntaxKind.JSDocFunctionType:
                     return bindFunctionOrConstructorType(<SignatureDeclaration>node);
                 case SyntaxKind.TypeLiteral:
+                case SyntaxKind.JSDocTypeLiteral:
                 case SyntaxKind.JSDocRecordType:
                     return bindAnonymousDeclaration(<TypeLiteralNode>node, SymbolFlags.TypeLiteral, "__type");
                 case SyntaxKind.ObjectLiteralExpression:
@@ -1736,6 +1792,7 @@ namespace ts {
                     return bindClassLikeDeclaration(<ClassLikeDeclaration>node);
                 case SyntaxKind.InterfaceDeclaration:
                     return bindBlockScopedDeclaration(<Declaration>node, SymbolFlags.Interface, SymbolFlags.InterfaceExcludes);
+                case SyntaxKind.JSDocTypedefTag:
                 case SyntaxKind.TypeAliasDeclaration:
                     return bindBlockScopedDeclaration(<Declaration>node, SymbolFlags.TypeAlias, SymbolFlags.TypeAliasExcludes);
                 case SyntaxKind.EnumDeclaration:
@@ -1904,7 +1961,7 @@ namespace ts {
             classPrototype.parent = leftSideOfAssignment;
 
             const funcSymbol = container.locals[constructorFunction.text];
-            if (!funcSymbol || !(funcSymbol.flags & SymbolFlags.Function)) {
+            if (!funcSymbol || !(funcSymbol.flags & SymbolFlags.Function || isDeclarationOfFunctionExpression(funcSymbol))) {
                 return;
             }
 
@@ -2041,10 +2098,10 @@ namespace ts {
             checkStrictModeFunctionName(<FunctionDeclaration>node);
             if (inStrictMode) {
                 checkStrictModeFunctionDeclaration(node);
-                return bindBlockScopedDeclaration(node, SymbolFlags.Function, SymbolFlags.FunctionExcludes);
+                bindBlockScopedDeclaration(node, SymbolFlags.Function, SymbolFlags.FunctionExcludes);
             }
             else {
-                return declareSymbolAndAddToSymbolTable(<Declaration>node, SymbolFlags.Function, SymbolFlags.FunctionExcludes);
+                declareSymbolAndAddToSymbolTable(<Declaration>node, SymbolFlags.Function, SymbolFlags.FunctionExcludes);
             }
         }
 
@@ -2075,6 +2132,10 @@ namespace ts {
             return hasDynamicName(node)
                 ? bindAnonymousDeclaration(node, symbolFlags, "__computed")
                 : declareSymbolAndAddToSymbolTable(node, symbolFlags, symbolExcludes);
+        }
+
+        function bindJSDocProperty(node: JSDocPropertyTag) {
+            return declareSymbolAndAddToSymbolTable(node, SymbolFlags.Property, SymbolFlags.PropertyExcludes);
         }
 
         // reachability checks
