@@ -194,6 +194,14 @@ declare namespace ts.server.protocol {
     }
 
     /**
+      * Go to implementation request; value of command field is
+      * "implementation". Return response giving the file locations that
+      * implement the symbol found in file at location line, col.
+      */
+    export interface ImplementationRequest extends FileLocationRequest {
+    }
+
+    /**
       * Location in source code expressed as (one-based) line and character offset.
       */
     export interface Location {
@@ -237,6 +245,13 @@ declare namespace ts.server.protocol {
       * Definition response message.  Gives text range for definition.
       */
     export interface TypeDefinitionResponse extends Response {
+        body?: FileSpan[];
+    }
+
+    /**
+      * Implementation response message.  Gives text range for implementations.
+      */
+    export interface ImplementationResponse extends Response {
         body?: FileSpan[];
     }
 
@@ -438,6 +453,9 @@ declare namespace ts.server.protocol {
         /** Number of spaces to indent during formatting. Default value is 4. */
         indentSize?: number;
 
+        /** Number of additional spaces to indent during formatting to preserve base indentation (ex. script block indentation). Default value is 0. */
+        baseIndentSize?: number;
+
         /** The new line character to be used. Default value is the OS line delimiter. */
         newLineCharacter?: string;
 
@@ -478,7 +496,7 @@ declare namespace ts.server.protocol {
         placeOpenBraceOnNewLineForControlBlocks?: boolean;
 
         /** Index operator */
-        [key: string]: string | number | boolean;
+        [key: string]: string | number | boolean | undefined;
     }
 
     /**
@@ -770,6 +788,11 @@ declare namespace ts.server.protocol {
          * is often the same as the name but may be different in certain circumstances.
          */
         sortText: string;
+        /**
+         * An optional span that indicates the text to be replaced by this completion item. If present,
+         * this span should be used instead of the default one.
+         */
+        replacementSpan?: TextSpan;
     }
 
     /**
@@ -904,7 +927,6 @@ declare namespace ts.server.protocol {
      * Arguments of a signature help request.
      */
     export interface SignatureHelpRequestArgs extends FileLocationRequestArgs {
-
     }
 
     /**
@@ -921,6 +943,32 @@ declare namespace ts.server.protocol {
      */
     export interface SignatureHelpResponse extends Response {
         body?: SignatureHelpItems;
+    }
+
+    /**
+      * Synchronous request for semantic diagnostics of one file.
+      */
+    export interface SemanticDiagnosticsSyncRequest extends FileRequest {
+    }
+
+    /**
+      * Response object for synchronous sematic diagnostics request.
+      */
+    export interface SemanticDiagnosticsSyncResponse extends Response {
+        body?: Diagnostic[];
+    }
+
+    /**
+      * Synchronous request for syntactic diagnostics of one file.
+      */
+    export interface SyntacticDiagnosticsSyncRequest extends FileRequest {
+    }
+
+    /**
+      * Response object for synchronous syntactic diagnostics request.
+      */
+    export interface SyntacticDiagnosticsSyncResponse extends Response {
+        body?: Diagnostic[];
     }
 
     /**
@@ -1108,6 +1156,11 @@ declare namespace ts.server.protocol {
           *  Optional limit on the number of items to return.
           */
         maxResultCount?: number;
+        /**
+          * Optional flag to indicate we want results for just the current file
+          * or the entire project.
+          */
+        currentFileOnly?: boolean;
     }
 
     /**

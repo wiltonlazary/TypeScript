@@ -81,6 +81,19 @@ namespace ts.formatting {
                 rules.push(this.globalRules.NoSpaceBetweenBrackets);
             }
 
+            // The default value of InsertSpaceAfterOpeningAndBeforeClosingNonemptyBraces is true
+            // so if the option is undefined, we should treat it as true as well
+            if (options.InsertSpaceAfterOpeningAndBeforeClosingNonemptyBraces !== false) {
+                rules.push(this.globalRules.SpaceAfterOpenBrace);
+                rules.push(this.globalRules.SpaceBeforeCloseBrace);
+                rules.push(this.globalRules.NoSpaceBetweenEmptyBraceBrackets);
+            }
+            else {
+                rules.push(this.globalRules.NoSpaceAfterOpenBrace);
+                rules.push(this.globalRules.NoSpaceBeforeCloseBrace);
+                rules.push(this.globalRules.NoSpaceBetweenEmptyBraceBrackets);
+            }
+
             if (options.InsertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces) {
                 rules.push(this.globalRules.SpaceAfterTemplateHeadAndMiddle);
                 rules.push(this.globalRules.SpaceBeforeTemplateMiddleAndTail);
@@ -88,6 +101,15 @@ namespace ts.formatting {
             else {
                 rules.push(this.globalRules.NoSpaceAfterTemplateHeadAndMiddle);
                 rules.push(this.globalRules.NoSpaceBeforeTemplateMiddleAndTail);
+            }
+
+            if (options.InsertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces) {
+                rules.push(this.globalRules.SpaceAfterOpenBraceInJsxExpression);
+                rules.push(this.globalRules.SpaceBeforeCloseBraceInJsxExpression);
+            }
+            else {
+                rules.push(this.globalRules.NoSpaceAfterOpenBraceInJsxExpression);
+                rules.push(this.globalRules.NoSpaceBeforeCloseBraceInJsxExpression);
             }
 
             if (options.InsertSpaceAfterSemicolonInForStatements) {
@@ -113,6 +135,13 @@ namespace ts.formatting {
             if (options.PlaceOpenBraceOnNewLineForFunctions) {
                 rules.push(this.globalRules.NewLineBeforeOpenBraceInFunction);
                 rules.push(this.globalRules.NewLineBeforeOpenBraceInTypeScriptDeclWithBlock);
+            }
+
+            if (options.InsertSpaceAfterTypeAssertion) {
+                rules.push(this.globalRules.SpaceAfterTypeAssertion);
+            }
+            else {
+                rules.push(this.globalRules.NoSpaceAfterTypeAssertion);
             }
 
             rules = rules.concat(this.globalRules.LowPriorityCommonRules);

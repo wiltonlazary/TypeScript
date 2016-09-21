@@ -18,9 +18,9 @@ let z = Foo;
 
 //// [a.js]
 "use strict";
-var Bar = require('./foo');
+var Bar = require("./foo");
 Bar.fn();
 var x;
 var y = x.n;
 // should error
-var z = exports.Foo;
+var z = Foo;

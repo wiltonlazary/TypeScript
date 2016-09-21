@@ -82,6 +82,7 @@ interface TestConfig {
     light?: boolean;
     taskConfigsFolder?: string;
     workerCount?: number;
+    stackTraceLimit?: number | "full";
     tasks?: TaskSet[];
     test?: string[];
     runUnitTests?: boolean;
@@ -114,6 +115,13 @@ if (testConfigContent !== "") {
             }
             runners.push(runner);
         }
+    }
+
+    if (testConfig.stackTraceLimit === "full") {
+        (<any>Error).stackTraceLimit = Infinity;
+    }
+    else if ((+testConfig.stackTraceLimit | 0) > 0) {
+        (<any>Error).stackTraceLimit = testConfig.stackTraceLimit;
     }
 
     if (testConfig.test && testConfig.test.length > 0) {
@@ -193,7 +201,7 @@ if (taskConfigsFolder) {
         for (let i = 0; i < workerCount; i++) {
             const startPos = i * chunkSize;
             const len = Math.min(chunkSize, files.length - startPos);
-            if (len !== 0) {
+            if (len > 0) {
                 workerConfigs[i].tasks.push({
                     runner: runner.kind(),
                     files: files.slice(startPos, startPos + len)
@@ -214,5 +222,5 @@ else {
 }
 if (!runUnitTests) {
     // patch `describe` to skip unit tests
-    describe = <any>describe.skip;
+    describe = <any>(function () { });
 }
