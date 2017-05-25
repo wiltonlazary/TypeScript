@@ -8,17 +8,17 @@
 // @Filename: foo.d.ts
 ////declare const /*foo_value_declaration*/foo: number;
 ////declare module "foo_module" {
-////    interface I { x: number; y: number }
+////    interface /*foo_type_declaration*/I { x: number; y: number }
 ////    export = I;
 ////}
 
 // @Filename: foo_user.ts
 ///////<reference path="foo.d.ts" />
-/////*foo_type_declaration*/import foo = require("foo_module");
+////import foo = require("foo_module");
 ////const x = foo/*foo_value*/;
 ////const i: foo/*foo_type*/ = { x: 1, y: 2 };
 
-verify.numberOfErrorsInCurrentFile(0);
+verify.noErrors();
 
 verify.navigationItemsListCount(2, "foo", "exact");
 verify.navigationItemsListContains("foo", "alias", "foo", "exact");
@@ -37,19 +37,18 @@ verify.goToDefinitionIs("foo_type_declaration");
 
 
 // @Filename: bar.d.ts
-/////*bar_type_declaration*/declare interface bar { x: number; y: number }
+////declare interface /*bar_type_declaration*/bar { x: number; y: number }
 ////declare module "bar_module" {
-////    const x: number;
+////    const /*bar_value_declaration*/x: number;
 ////    export = x;
 ////}
 
 // @Filename: bar_user.ts
 ///////<reference path="bar.d.ts" />
-/////*bar_value_declaration*/import bar = require("bar_module");
+////import bar = require("bar_module");
 ////const x = bar/*bar_value*/;
 ////const i: bar/*bar_type*/ = { x: 1, y: 2 };
 
-verify.numberOfErrorsInCurrentFile(0);
 verify.navigationItemsListCount(2, "bar", "exact");
 verify.navigationItemsListContains("bar", "alias", "bar", "exact");
 verify.navigationItemsListContains("bar", "interface", "bar", "exact");

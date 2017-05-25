@@ -101,7 +101,7 @@ namespace ts {
 
                     Harness.Baseline.runBaseline("JSDocParsing/DocComments.parsesCorrectly." + name + ".json",
                         () => JSON.stringify(comment.jsDoc,
-                            (k, v) => v && v.pos !== undefined ? JSON.parse(Utils.sourceFileToJSON(v)) : v, 4));
+                            (_, v) => v && v.pos !== undefined ? JSON.parse(Utils.sourceFileToJSON(v)) : v, 4));
                 });
             }
 
@@ -241,6 +241,18 @@ namespace ts {
   */`);
 
 
+                parsesCorrectly("argSynonymForParamTag",
+`/**
+  * @arg {number} name1 Description
+  */`);
+
+
+                parsesCorrectly("argumentSynonymForParamTag",
+`/**
+  * @argument {number} name1 Description
+  */`);
+
+
                 parsesCorrectly("templateTag",
 `/**
   * @template T
@@ -286,6 +298,25 @@ namespace ts {
   * @property {number} age
   * @property {string} name
   */`);
+            });
+        });
+        describe("getFirstToken", () => {
+            it("gets jsdoc", () => {
+                const root = ts.createSourceFile("foo.ts", "/** comment */var a = true;", ts.ScriptTarget.ES5, /*setParentNodes*/ true);
+                assert.isDefined(root);
+                assert.equal(root.kind, ts.SyntaxKind.SourceFile);
+                const first = root.getFirstToken();
+                assert.isDefined(first);
+                assert.equal(first.kind, ts.SyntaxKind.VarKeyword);
+            });
+        });
+        describe("getLastToken", () => {
+            it("gets jsdoc", () => {
+                const root = ts.createSourceFile("foo.ts", "var a = true;/** comment */", ts.ScriptTarget.ES5, /*setParentNodes*/ true);
+                assert.isDefined(root);
+                const last = root.getLastToken();
+                assert.isDefined(last);
+                assert.equal(last.kind, ts.SyntaxKind.EndOfFileToken);
             });
         });
     });

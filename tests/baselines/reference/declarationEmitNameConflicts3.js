@@ -27,11 +27,16 @@ module M.P {
 }
 
 //// [declarationEmitNameConflicts3.js]
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var M;
 (function (M) {
     var D;
@@ -50,7 +55,6 @@ var M;
         E.f = f;
     })(E = M.E || (M.E = {}));
 })(M || (M = {}));
-var M;
 (function (M) {
     var P;
     (function (P) {
@@ -64,15 +68,15 @@ var M;
         var E = (function (_super) {
             __extends(E, _super);
             function E() {
-                _super.apply(this, arguments);
+                return _super !== null && _super.apply(this, arguments) || this;
             }
             return E;
         }(C));
         P.E = E;
+        var D;
         (function (D) {
             D[D["f"] = 0] = "f";
-        })(P.D || (P.D = {}));
-        var D = P.D;
+        })(D = P.D || (P.D = {}));
         P.w = M.D.f; // error, should be typeof M.D.f
         P.x = M.C.f; // error, should be typeof M.C.f
         P.x = M.E.f; // error, should be typeof M.E.f

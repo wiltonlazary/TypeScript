@@ -63,6 +63,7 @@ var f;
 module.exports = f;
 //// [declarationEmit_nameConflicts_0.js]
 "use strict";
+exports.__esModule = true;
 var im = require("./declarationEmit_nameConflicts_1");
 var M;
 (function (M) {
@@ -85,7 +86,6 @@ var M;
     M.c = N;
     M.d = im;
 })(M = exports.M || (exports.M = {}));
-var M;
 (function (M) {
     var P;
     (function (P) {
@@ -111,7 +111,6 @@ var M;
         P.d = M.d; // emitted incorrectly as typeof im
     })(P = M.P || (M.P = {}));
 })(M = exports.M || (exports.M = {}));
-var M;
 (function (M) {
     var Q;
     (function (Q) {

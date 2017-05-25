@@ -4,7 +4,11 @@ namespace ts {
         getChildCount(sourceFile?: SourceFile): number;
         getChildAt(index: number, sourceFile?: SourceFile): Node;
         getChildren(sourceFile?: SourceFile): Node[];
+        /* @internal */
+        getChildren(sourceFile?: SourceFileLike): Node[];
         getStart(sourceFile?: SourceFile, includeJsDocComment?: boolean): number;
+        /* @internal */
+        getStart(sourceFile?: SourceFileLike, includeJsDocComment?: boolean): number;
         getFullStart(): number;
         getEnd(): number;
         getWidth(sourceFile?: SourceFile): number;
@@ -14,35 +18,39 @@ namespace ts {
         getText(sourceFile?: SourceFile): string;
         getFirstToken(sourceFile?: SourceFile): Node;
         getLastToken(sourceFile?: SourceFile): Node;
+        // See ts.forEachChild for documentation.
+        forEachChild<T>(cbNode: (node: Node) => T | undefined, cbNodeArray?: (nodes: NodeArray<Node>) => T | undefined): T | undefined;
     }
 
     export interface Symbol {
         getFlags(): SymbolFlags;
         getName(): string;
-        getDeclarations(): Declaration[];
+        getDeclarations(): Declaration[] | undefined;
         getDocumentationComment(): SymbolDisplayPart[];
+        getJsDocTags(): JSDocTagInfo[];
     }
 
     export interface Type {
         getFlags(): TypeFlags;
-        getSymbol(): Symbol;
+        getSymbol(): Symbol | undefined;
         getProperties(): Symbol[];
-        getProperty(propertyName: string): Symbol;
+        getProperty(propertyName: string): Symbol | undefined;
         getApparentProperties(): Symbol[];
         getCallSignatures(): Signature[];
         getConstructSignatures(): Signature[];
-        getStringIndexType(): Type;
-        getNumberIndexType(): Type;
-        getBaseTypes(): ObjectType[];
+        getStringIndexType(): Type | undefined;
+        getNumberIndexType(): Type | undefined;
+        getBaseTypes(): BaseType[] | undefined;
         getNonNullableType(): Type;
     }
 
     export interface Signature {
         getDeclaration(): SignatureDeclaration;
-        getTypeParameters(): Type[];
+        getTypeParameters(): TypeParameter[] | undefined;
         getParameters(): Symbol[];
         getReturnType(): Type;
         getDocumentationComment(): SymbolDisplayPart[];
+        getJsDocTags(): JSDocTagInfo[];
     }
 
     export interface SourceFile {
@@ -53,9 +61,14 @@ namespace ts {
         /* @internal */ getNamedDeclarations(): Map<Declaration[]>;
 
         getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
+        getLineEndOfPosition(pos: number): number;
         getLineStarts(): number[];
         getPositionOfLineAndCharacter(line: number, character: number): number;
         update(newText: string, textChangeRange: TextChangeRange): SourceFile;
+    }
+
+    export interface SourceFileLike {
+        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
     }
 
     /**
@@ -90,14 +103,16 @@ namespace ts {
             }
 
             public getText(start: number, end: number): string {
-                return this.text.substring(start, end);
+                return start === 0 && end === this.text.length
+                    ? this.text
+                    : this.text.substring(start, end);
             }
 
             public getLength(): number {
                 return this.text.length;
             }
 
-            public getChangeRange(oldSnapshot: IScriptSnapshot): TextChangeRange {
+            public getChangeRange(): TextChangeRange {
                 // Text-based snapshots do not support incremental parsing. Return undefined
                 // to signal that to the caller.
                 return undefined;
@@ -149,6 +164,11 @@ namespace ts {
         fileExists?(path: string): boolean;
 
         /*
+         * LS host can optionally implement these methods to support automatic updating when new type libraries are installed
+         */
+        getTypeRootsVersion?(): number;
+
+        /*
          * LS host can optionally implement this method if it wants to be completely in charge of module name resolution.
          * if implementation is omitted then language service will use built-in module resolution logic and get answers to
          * host specific questions using 'getScriptSnapshot'.
@@ -162,6 +182,11 @@ namespace ts {
          * completions will not be provided
          */
         getDirectories?(directoryName: string): string[];
+
+        /**
+         * Gets a set of custom transformers to use during emit.
+         */
+        getCustomTransformers?(): CustomTransformers | undefined;
     }
 
     //
@@ -218,23 +243,28 @@ namespace ts {
         /** @deprecated */
         getOccurrencesAtPosition(fileName: string, position: number): ReferenceEntry[];
 
-        getNavigateToItems(searchValue: string, maxResultCount?: number, fileName?: string): NavigateToItem[];
+        getNavigateToItems(searchValue: string, maxResultCount?: number, fileName?: string, excludeDtsFiles?: boolean): NavigateToItem[];
         getNavigationBarItems(fileName: string): NavigationBarItem[];
+        getNavigationTree(fileName: string): NavigationTree;
 
         getOutliningSpans(fileName: string): OutliningSpan[];
         getTodoComments(fileName: string, descriptors: TodoCommentDescriptor[]): TodoComment[];
         getBraceMatchingAtPosition(fileName: string, position: number): TextSpan[];
-        getIndentationAtPosition(fileName: string, position: number, options: EditorOptions): number;
+        getIndentationAtPosition(fileName: string, position: number, options: EditorOptions | EditorSettings): number;
 
-        getFormattingEditsForRange(fileName: string, start: number, end: number, options: FormatCodeOptions): TextChange[];
-        getFormattingEditsForDocument(fileName: string, options: FormatCodeOptions): TextChange[];
-        getFormattingEditsAfterKeystroke(fileName: string, position: number, key: string, options: FormatCodeOptions): TextChange[];
+        getFormattingEditsForRange(fileName: string, start: number, end: number, options: FormatCodeOptions | FormatCodeSettings): TextChange[];
+        getFormattingEditsForDocument(fileName: string, options: FormatCodeOptions | FormatCodeSettings): TextChange[];
+        getFormattingEditsAfterKeystroke(fileName: string, position: number, key: string, options: FormatCodeOptions | FormatCodeSettings): TextChange[];
 
         getDocCommentTemplateAtPosition(fileName: string, position: number): TextInsertion;
 
         isValidBraceCompletionAtPosition(fileName: string, position: number, openingBrace: number): boolean;
 
-        getEmitOutput(fileName: string): EmitOutput;
+        getCodeFixesAtPosition(fileName: string, start: number, end: number, errorCodes: number[], formatOptions: FormatCodeSettings): CodeAction[];
+        getApplicableRefactors(fileName: string, positionOrRaneg: number | TextRange): ApplicableRefactorInfo[];
+        getRefactorCodeActions(fileName: string, formatOptions: FormatCodeSettings, positionOrRange: number | TextRange, refactorName: string): CodeAction[] | undefined;
+
+        getEmitOutput(fileName: string, emitOnlyDtsFiles?: boolean): EmitOutput;
 
         getProgram(): Program;
 
@@ -256,18 +286,43 @@ namespace ts {
 
     export interface ClassifiedSpan {
         textSpan: TextSpan;
-        classificationType: string; // ClassificationTypeNames
+        classificationType: ClassificationTypeNames;
     }
 
+    /**
+     * Navigation bar interface designed for visual studio's dual-column layout.
+     * This does not form a proper tree.
+     * The navbar is returned as a list of top-level items, each of which has a list of child items.
+     * Child items always have an empty array for their `childItems`.
+     */
     export interface NavigationBarItem {
         text: string;
-        kind: string;
+        kind: ScriptElementKind;
         kindModifiers: string;
         spans: TextSpan[];
         childItems: NavigationBarItem[];
         indent: number;
         bolded: boolean;
         grayed: boolean;
+    }
+
+    /**
+     * Node in a tree of nested declarations in a file.
+     * The top node is always a script or module node.
+     */
+    export interface NavigationTree {
+        /** Name of the declaration, or a short description, e.g. "<class>". */
+        text: string;
+        kind: ScriptElementKind;
+        /** ScriptElementKindModifier separated by commas, e.g. "public,abstract" */
+        kindModifiers: string;
+        /**
+         * Spans of the nodes that generated this declaration.
+         * There will be more than one if this is the result of merging.
+         */
+        spans: TextSpan[];
+        /** Present if non-empty */
+        childItems?: NavigationTree[];
     }
 
     export interface TodoCommentDescriptor {
@@ -286,27 +341,46 @@ namespace ts {
         newText: string;
     }
 
+    export interface FileTextChanges {
+        fileName: string;
+        textChanges: TextChange[];
+    }
+
+    export interface CodeAction {
+        /** Description of the code action to display in the UI of the editor */
+        description: string;
+        /** Text changes to apply to each file as part of the code action */
+        changes: FileTextChanges[];
+    }
+
+    export interface ApplicableRefactorInfo {
+        name: string;
+        description: string;
+    }
+
     export interface TextInsertion {
         newText: string;
         /** The position in newText the caret should point to after the insertion. */
         caretOffset: number;
     }
 
-    export interface RenameLocation {
+    export interface DocumentSpan {
         textSpan: TextSpan;
         fileName: string;
     }
 
-    export interface ReferenceEntry {
-        textSpan: TextSpan;
-        fileName: string;
+    export interface RenameLocation extends DocumentSpan {
+    }
+
+    export interface ReferenceEntry extends DocumentSpan {
         isWriteAccess: boolean;
         isDefinition: boolean;
+        isInString?: true;
     }
 
-    export interface ImplementationLocation {
-        textSpan: TextSpan;
-        fileName: string;
+    export interface ImplementationLocation extends DocumentSpan {
+        kind: ScriptElementKind;
+        displayParts: SymbolDisplayPart[];
     }
 
     export interface DocumentHighlights {
@@ -314,31 +388,39 @@ namespace ts {
         highlightSpans: HighlightSpan[];
     }
 
-    export namespace HighlightSpanKind {
-        export const none = "none";
-        export const definition = "definition";
-        export const reference = "reference";
-        export const writtenReference = "writtenReference";
+    export const enum HighlightSpanKind {
+        none = "none",
+        definition = "definition",
+        reference = "reference",
+        writtenReference = "writtenReference",
     }
 
     export interface HighlightSpan {
         fileName?: string;
+        isInString?: true;
         textSpan: TextSpan;
-        kind: string;
+        kind: HighlightSpanKind;
     }
 
     export interface NavigateToItem {
         name: string;
-        kind: string;
+        kind: ScriptElementKind;
         kindModifiers: string;
-        matchKind: string;
+        matchKind: string; // TODO: keyof typeof PatternMatchKind; (https://github.com/Microsoft/TypeScript/issues/15102)
         isCaseSensitive: boolean;
         fileName: string;
         textSpan: TextSpan;
         containerName: string;
-        containerKind: string;
+        containerKind: ScriptElementKind;
     }
 
+    export enum IndentStyle {
+        None = 0,
+        Block = 1,
+        Smart = 2,
+    }
+
+    /* @deprecated - consider using EditorSettings instead */
     export interface EditorOptions {
         BaseIndentSize?: number;
         IndentSize: number;
@@ -348,16 +430,21 @@ namespace ts {
         IndentStyle: IndentStyle;
     }
 
-    export enum IndentStyle {
-        None = 0,
-        Block = 1,
-        Smart = 2,
+    export interface EditorSettings {
+        baseIndentSize?: number;
+        indentSize?: number;
+        tabSize?: number;
+        newLineCharacter?: string;
+        convertTabsToSpaces?: boolean;
+        indentStyle?: IndentStyle;
     }
 
+    /* @deprecated - consider using FormatCodeSettings instead */
     export interface FormatCodeOptions extends EditorOptions {
         InsertSpaceAfterCommaDelimiter: boolean;
         InsertSpaceAfterSemicolonInForStatements: boolean;
         InsertSpaceBeforeAndAfterBinaryOperators: boolean;
+        InsertSpaceAfterConstructor?: boolean;
         InsertSpaceAfterKeywordsInControlFlowStatements: boolean;
         InsertSpaceAfterFunctionKeywordForAnonymousFunctions: boolean;
         InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis: boolean;
@@ -366,17 +453,35 @@ namespace ts {
         InsertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces: boolean;
         InsertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces?: boolean;
         InsertSpaceAfterTypeAssertion?: boolean;
+        InsertSpaceBeforeFunctionParenthesis?: boolean;
         PlaceOpenBraceOnNewLineForFunctions: boolean;
         PlaceOpenBraceOnNewLineForControlBlocks: boolean;
-        [s: string]: boolean | number | string | undefined;
+    }
+
+    export interface FormatCodeSettings extends EditorSettings {
+        insertSpaceAfterCommaDelimiter?: boolean;
+        insertSpaceAfterSemicolonInForStatements?: boolean;
+        insertSpaceBeforeAndAfterBinaryOperators?: boolean;
+        insertSpaceAfterConstructor?: boolean;
+        insertSpaceAfterKeywordsInControlFlowStatements?: boolean;
+        insertSpaceAfterFunctionKeywordForAnonymousFunctions?: boolean;
+        insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis?: boolean;
+        insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets?: boolean;
+        insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces?: boolean;
+        insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces?: boolean;
+        insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces?: boolean;
+        insertSpaceAfterTypeAssertion?: boolean;
+        insertSpaceBeforeFunctionParenthesis?: boolean;
+        placeOpenBraceOnNewLineForFunctions?: boolean;
+        placeOpenBraceOnNewLineForControlBlocks?: boolean;
     }
 
     export interface DefinitionInfo {
         fileName: string;
         textSpan: TextSpan;
-        kind: string;
+        kind: ScriptElementKind;
         name: string;
-        containerKind: string;
+        containerKind: ScriptElementKind;
         containerName: string;
     }
 
@@ -419,12 +524,18 @@ namespace ts {
         kind: string;
     }
 
+    export interface JSDocTagInfo {
+        name: string;
+        text?: string;
+    }
+
     export interface QuickInfo {
-        kind: string;
+        kind: ScriptElementKind;
         kindModifiers: string;
         textSpan: TextSpan;
         displayParts: SymbolDisplayPart[];
         documentation: SymbolDisplayPart[];
+        tags: JSDocTagInfo[];
     }
 
     export interface RenameInfo {
@@ -432,7 +543,7 @@ namespace ts {
         localizedErrorMessage: string;
         displayName: string;
         fullDisplayName: string;
-        kind: string;
+        kind: ScriptElementKind;
         kindModifiers: string;
         triggerSpan: TextSpan;
     }
@@ -458,6 +569,7 @@ namespace ts {
         separatorDisplayParts: SymbolDisplayPart[];
         parameters: SignatureHelpParameter[];
         documentation: SymbolDisplayPart[];
+        tags: JSDocTagInfo[];
     }
 
     /**
@@ -472,30 +584,36 @@ namespace ts {
     }
 
     export interface CompletionInfo {
+        isGlobalCompletion: boolean;
         isMemberCompletion: boolean;
-        isNewIdentifierLocation: boolean;  // true when the current location also allows for a new identifier
+
+        /**
+         * true when the current location also allows for a new identifier
+         */
+        isNewIdentifierLocation: boolean;
         entries: CompletionEntry[];
     }
 
     export interface CompletionEntry {
         name: string;
-        kind: string;            // see ScriptElementKind
+        kind: ScriptElementKind;
         kindModifiers: string;   // see ScriptElementKindModifier, comma separated
         sortText: string;
         /**
-          * An optional span that indicates the text to be replaced by this completion item. It will be
-          * set if the required span differs from the one generated by the default replacement behavior and should
-          * be used in that case
-          */
+         * An optional span that indicates the text to be replaced by this completion item. It will be
+         * set if the required span differs from the one generated by the default replacement behavior and should
+         * be used in that case
+         */
         replacementSpan?: TextSpan;
     }
 
     export interface CompletionEntryDetails {
         name: string;
-        kind: string;            // see ScriptElementKind
+        kind: ScriptElementKind;
         kindModifiers: string;   // see ScriptElementKindModifier, comma separated
         displayParts: SymbolDisplayPart[];
         documentation: SymbolDisplayPart[];
+        tags: JSDocTagInfo[];
     }
 
     export interface OutliningSpan {
@@ -509,9 +627,9 @@ namespace ts {
         bannerText: string;
 
         /**
-          * Whether or not this region should be automatically collapsed when
-          * the 'Collapse to Definitions' command is invoked.
-          */
+         * Whether or not this region should be automatically collapsed when
+         * the 'Collapse to Definitions' command is invoked.
+         */
         autoCollapse: boolean;
     }
 
@@ -589,137 +707,140 @@ namespace ts {
         getEncodedLexicalClassifications(text: string, endOfLineState: EndOfLineState, syntacticClassifierAbsent: boolean): Classifications;
     }
 
-    // TODO: move these to enums
-    export namespace ScriptElementKind {
-        export const unknown = "";
-        export const warning = "warning";
+    export const enum ScriptElementKind {
+        unknown = "",
+        warning = "warning",
 
         /** predefined type (void) or keyword (class) */
-        export const keyword = "keyword";
+        keyword = "keyword",
 
         /** top level script node */
-        export const scriptElement = "script";
+        scriptElement = "script",
 
         /** module foo {} */
-        export const moduleElement = "module";
+        moduleElement = "module",
 
         /** class X {} */
-        export const classElement = "class";
+        classElement = "class",
 
         /** var x = class X {} */
-        export const localClassElement = "local class";
+        localClassElement = "local class",
 
         /** interface Y {} */
-        export const interfaceElement = "interface";
+        interfaceElement = "interface",
 
         /** type T = ... */
-        export const typeElement = "type";
+        typeElement = "type",
 
         /** enum E */
-        export const enumElement = "enum";
-        // TODO: GH#9983
-        export const enumMemberElement = "const";
+        enumElement = "enum",
+        enumMemberElement = "enum member",
 
         /**
          * Inside module and script only
          * const v = ..
          */
-        export const variableElement = "var";
+        variableElement = "var",
 
         /** Inside function */
-        export const localVariableElement = "local var";
+        localVariableElement = "local var",
 
         /**
          * Inside module and script only
          * function f() { }
          */
-        export const functionElement = "function";
+        functionElement = "function",
 
         /** Inside function */
-        export const localFunctionElement = "local function";
+        localFunctionElement = "local function",
 
         /** class X { [public|private]* foo() {} } */
-        export const memberFunctionElement = "method";
+        memberFunctionElement = "method",
 
         /** class X { [public|private]* [get|set] foo:number; } */
-        export const memberGetAccessorElement = "getter";
-        export const memberSetAccessorElement = "setter";
+        memberGetAccessorElement = "getter",
+        memberSetAccessorElement = "setter",
 
         /**
          * class X { [public|private]* foo:number; }
          * interface Y { foo:number; }
          */
-        export const memberVariableElement = "property";
+        memberVariableElement = "property",
 
         /** class X { constructor() { } } */
-        export const constructorImplementationElement = "constructor";
+        constructorImplementationElement = "constructor",
 
         /** interface Y { ():number; } */
-        export const callSignatureElement = "call";
+        callSignatureElement = "call",
 
         /** interface Y { []:number; } */
-        export const indexSignatureElement = "index";
+        indexSignatureElement = "index",
 
         /** interface Y { new():Y; } */
-        export const constructSignatureElement = "construct";
+        constructSignatureElement = "construct",
 
         /** function foo(*Y*: string) */
-        export const parameterElement = "parameter";
+        parameterElement = "parameter",
 
-        export const typeParameterElement = "type parameter";
+        typeParameterElement = "type parameter",
 
-        export const primitiveType = "primitive type";
+        primitiveType = "primitive type",
 
-        export const label = "label";
+        label = "label",
 
-        export const alias = "alias";
+        alias = "alias",
 
-        export const constElement = "const";
+        constElement = "const",
 
-        export const letElement = "let";
+        letElement = "let",
 
-        export const directory = "directory";
+        directory = "directory",
 
-        export const externalModuleName = "external module name";
+        externalModuleName = "external module name",
+
+        /**
+         * <JsxTagName attribute1 attribute2={0} />
+         */
+        jsxAttribute = "JSX attribute",
     }
 
-    export namespace ScriptElementKindModifier {
-        export const none = "";
-        export const publicMemberModifier = "public";
-        export const privateMemberModifier = "private";
-        export const protectedMemberModifier = "protected";
-        export const exportedModifier = "export";
-        export const ambientModifier = "declare";
-        export const staticModifier = "static";
-        export const abstractModifier = "abstract";
+    export const enum ScriptElementKindModifier {
+        none = "",
+        publicMemberModifier = "public",
+        privateMemberModifier = "private",
+        protectedMemberModifier = "protected",
+        exportedModifier = "export",
+        ambientModifier = "declare",
+        staticModifier = "static",
+        abstractModifier = "abstract",
     }
 
-    export class ClassificationTypeNames {
-        public static comment = "comment";
-        public static identifier = "identifier";
-        public static keyword = "keyword";
-        public static numericLiteral = "number";
-        public static operator = "operator";
-        public static stringLiteral = "string";
-        public static whiteSpace = "whitespace";
-        public static text = "text";
+    export const enum ClassificationTypeNames {
+        comment = "comment",
+        identifier = "identifier",
+        keyword = "keyword",
+        numericLiteral = "number",
+        operator = "operator",
+        stringLiteral = "string",
+        whiteSpace = "whitespace",
+        text = "text",
 
-        public static punctuation = "punctuation";
+        punctuation = "punctuation",
 
-        public static className = "class name";
-        public static enumName = "enum name";
-        public static interfaceName = "interface name";
-        public static moduleName = "module name";
-        public static typeParameterName = "type parameter name";
-        public static typeAliasName = "type alias name";
-        public static parameterName = "parameter name";
-        public static docCommentTagName = "doc comment tag name";
-        public static jsxOpenTagName = "jsx open tag name";
-        public static jsxCloseTagName = "jsx close tag name";
-        public static jsxSelfClosingTagName = "jsx self closing tag name";
-        public static jsxAttribute = "jsx attribute";
-        public static jsxText = "jsx text";
-        public static jsxAttributeStringLiteralValue = "jsx attribute string literal value";
+        className = "class name",
+        enumName = "enum name",
+        interfaceName = "interface name",
+        moduleName = "module name",
+        typeParameterName = "type parameter name",
+        typeAliasName = "type alias name",
+        parameterName = "parameter name",
+        docCommentTagName = "doc comment tag name",
+        jsxOpenTagName = "jsx open tag name",
+        jsxCloseTagName = "jsx close tag name",
+        jsxSelfClosingTagName = "jsx self closing tag name",
+        jsxAttribute = "jsx attribute",
+        jsxText = "jsx text",
+        jsxAttributeStringLiteralValue = "jsx attribute string literal value",
     }
 
     export const enum ClassificationType {
