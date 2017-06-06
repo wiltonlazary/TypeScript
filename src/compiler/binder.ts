@@ -2178,7 +2178,10 @@ namespace ts {
                 case SyntaxKind.JSDocRecordMember:
                     return bindPropertyWorker(node as JSDocRecordMember);
                 case SyntaxKind.JSDocPropertyTag:
-                    return declareSymbolAndAddToSymbolTable(node as JSDocPropertyTag, SymbolFlags.Property, SymbolFlags.PropertyExcludes);
+                    return declareSymbolAndAddToSymbolTable(node as JSDocPropertyTag,
+                        (node as JSDocPropertyTag).isBracketed || ((node as JSDocPropertyTag).typeExpression && (node as JSDocPropertyTag).typeExpression.type.kind === SyntaxKind.JSDocOptionalType) ?
+                            SymbolFlags.Property | SymbolFlags.Optional : SymbolFlags.Property,
+                        SymbolFlags.PropertyExcludes);
                 case SyntaxKind.JSDocFunctionType:
                     return bindFunctionOrConstructorType(<SignatureDeclaration>node);
                 case SyntaxKind.JSDocTypeLiteral:
@@ -2330,7 +2333,7 @@ namespace ts {
             // A common practice in node modules is to set 'export = module.exports = {}', this ensures that 'exports'
             // is still pointing to 'module.exports'.
             // We do not want to consider this as 'export=' since a module can have only one of these.
-            // Similarlly we do not want to treat 'module.exports = exports' as an 'export='.
+            // Similarly we do not want to treat 'module.exports = exports' as an 'export='.
             const assignedExpression = getRightMostAssignedExpression(node.right);
             if (isEmptyObjectLiteral(assignedExpression) || isExportsOrModuleExportsOrAlias(assignedExpression)) {
                 // Mark it as a module in case there are no other exports in the file
@@ -2736,6 +2739,10 @@ namespace ts {
             // If the this node contains a SpreadExpression, or is a super call, then it is an ES6
             // node.
             transformFlags |= TransformFlags.AssertES2015;
+        }
+
+        if (expression.kind === SyntaxKind.ImportKeyword) {
+            transformFlags |= TransformFlags.ContainsDynamicImport;
         }
 
         node.transformFlags = transformFlags | TransformFlags.HasComputedFlags;
